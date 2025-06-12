@@ -1,1 +1,1 @@
-application-example.properties 값 수정하기
+application-example.properties 수정하기
