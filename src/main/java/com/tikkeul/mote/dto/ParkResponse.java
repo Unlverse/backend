@@ -22,9 +22,9 @@ public class ParkResponse {
     private String duration;
     private String fee;
 
-    public static ParkResponse fromEntity(Park park, int pricePerMinute) {
+    public static ParkResponse fromEntity(Park park, int basePrice, int pricePerMinute) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime enterTime = park.getTimestamp();
+        LocalDateTime enterTime = park.getTimestamp(); // 입차 시간
 
         Duration duration = Duration.between(enterTime, now);
         long minutes = duration.toMinutes();
@@ -33,8 +33,8 @@ public class ParkResponse {
 
         String durationStr = String.format("%d시간 %d분", hours, remainMinutes);
 
-        int rawFee = (int) minutes * pricePerMinute;
-
+        // 요금 계산: 기본요금 + 분당요금 * 분
+        int rawFee = basePrice + (int) minutes * pricePerMinute;
         String formattedFee = String.format("%,d원", rawFee);
 
         return ParkResponse.builder()

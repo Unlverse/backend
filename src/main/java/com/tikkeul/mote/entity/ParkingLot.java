@@ -21,6 +21,9 @@ public class ParkingLot {
     @JoinColumn(name = "admin_id")
     private Admin admin;
 
+    @Column(nullable = false, name = "base_price")
+    private int basePrice; // 기본 요금
+
     @Column(nullable = false, name = "price_per_minute")
     private Integer pricePerMinute;
 

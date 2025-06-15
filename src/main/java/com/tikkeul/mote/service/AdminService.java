@@ -69,6 +69,7 @@ public class AdminService {
 
         ParkingLot lot = ParkingLot.builder()
                 .admin(admin)
+                .basePrice(request.getBasePrice())
                 .pricePerMinute(request.getPricePerMinute())
                 .totalLot(request.getTotalLot())
                 .build();
@@ -83,6 +84,10 @@ public class AdminService {
     public void updateParkingLot(Admin admin, ParkingLotUpdateRequest request) {
         ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin)
                 .orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
+
+        if (request.getBasePrice() != null) {
+            parkingLot.setBasePrice(request.getBasePrice()); // ✅ 기본요금 업데이트
+        }
 
         if (request.getPricePerMinute() != null) {
             parkingLot.setPricePerMinute(request.getPricePerMinute());
