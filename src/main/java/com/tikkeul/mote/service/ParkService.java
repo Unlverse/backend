@@ -61,7 +61,7 @@ public class ParkService {
 
         // 4. DTO로 변환
         List<ParkResponse> parkResponses = parks.stream()
-                .map(park -> ParkResponse.fromEntity(park, pricePerMinute))
+                .map(park -> ParkResponse.fromEntity(park, lot.getBasePrice(), lot.getPricePerMinute()))
                 .toList();
 
         // 5. 응답 객체 생성
