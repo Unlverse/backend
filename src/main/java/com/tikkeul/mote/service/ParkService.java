@@ -1,5 +1,7 @@
 package com.tikkeul.mote.service;
 
+import com.tikkeul.mote.dto.ParkListResponse;
+import com.tikkeul.mote.dto.ParkResponse;
 import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.entity.Park;
 import com.tikkeul.mote.entity.ParkingLot;
@@ -45,8 +47,29 @@ public class ParkService {
         parkRepository.save(park);
     }
 
-    public List<Park> getParksByAdmin(Admin admin) {
-        return parkRepository.findByAdmin(admin);
+    public ParkListResponse getParkListWithStatus(Admin admin) {
+        // 1. 차량 목록 조회
+        List<Park> parks = parkRepository.findByAdmin(admin);
+
+        // 2. 주차장 정보 조회 (단가, 총 대수 등)
+        ParkingLot lot = parkingLotRepository.findByAdmin(admin)
+                .orElseThrow(() -> new IllegalStateException("주차장 정보가 없습니다."));
+
+        int pricePerMinute = lot.getPricePerMinute(); //
+        // 3. 차량 수
+        int currentCount = parks.size();
+
+        // 4. DTO로 변환
+        List<ParkResponse> parkResponses = parks.stream()
+                .map(park -> ParkResponse.fromEntity(park, pricePerMinute))
+                .toList();
+
+        // 5. 응답 객체 생성
+        return ParkListResponse.builder()
+                .currentCount(currentCount)
+                .totalLot(lot.getTotalLot())
+                .parkLogs(parkResponses)
+                .build();
     }
 
     public void deletePark(Long parkId, Admin admin) {

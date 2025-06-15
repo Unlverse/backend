@@ -1,5 +1,6 @@
 package com.tikkeul.mote.controller;
 
+import com.tikkeul.mote.dto.ParkListResponse;
 import com.tikkeul.mote.dto.ParkResponse;
 import com.tikkeul.mote.dto.ParkUpdateRequest;
 import com.tikkeul.mote.entity.Admin;
@@ -22,14 +23,9 @@ public class ParkController {
     private final ParkService parkService;
 
     @GetMapping
-    public ResponseEntity<List<ParkResponse>> getMyParkLogs(@AuthenticationPrincipal AdminDetails adminDetails) {
+    public ResponseEntity<ParkListResponse> getMyParkLogs(@AuthenticationPrincipal AdminDetails adminDetails) {
         Admin admin = adminDetails.getAdmin();
-        List<Park> myParks = parkService.getParksByAdmin(admin);
-
-        List<ParkResponse> response = myParks.stream()
-                .map(ParkResponse::fromEntity)
-                .toList();
-
+        ParkListResponse response = parkService.getParkListWithStatus(admin);
         return ResponseEntity.ok(response);
     }
 
