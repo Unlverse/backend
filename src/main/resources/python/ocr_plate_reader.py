@@ -1,4 +1,4 @@
-#cmd에서 cd C:\Users\CJW\mote\src\main\resources\python 후에 python ocr_plate_reader.py 로 서버실행
+#cmd에서 cd C:\Users\jcw00\IdeaProjects\mote\src\main\resources\python 후에 python ocr_plate_reader.py 로 서버실행
 
 from flask import Flask, request, jsonify
 import easyocr

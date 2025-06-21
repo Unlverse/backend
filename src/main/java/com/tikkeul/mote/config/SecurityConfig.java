@@ -41,12 +41,15 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                // 로그인 관련 API 허용
                                 "/api/admin/login",
                                 "/api/admin/signup",
                                 "/api/admin/verify-business",
                                 "/api/phone/send",
-                                "/api/phone/verify"
-                        ).permitAll() // 로그인 관련 API 허용
+                                "/api/phone/verify",
+                                //사용자 주차정보조회 혀용
+                                "/api/parking/info"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 );
 
