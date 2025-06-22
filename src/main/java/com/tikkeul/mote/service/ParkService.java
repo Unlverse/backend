@@ -134,6 +134,7 @@ public class ParkService {
                 .duration(durationStr)
                 .fee(feeStr)
                 .address(address)
+                .adminPhone(park.getAdmin().getPhoneNumber())
                 .build();
     }
 }
