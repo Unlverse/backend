@@ -11,4 +11,5 @@ public class VisitorParkInfoResponse {
     private String duration;    // 주차 시간
     private String fee;         // 요금
     private String address;     // 주차 위치 주소
+    private String adminPhone;  // 관리자 전화번호
 }
