@@ -45,7 +45,8 @@ public class SecurityConfig {
                                 "/api/admin/signup",
                                 "/api/admin/verify-business",
                                 "/api/phone/send",
-                                "/api/phone/verify"
+                                "/api/phone/verify",
+                                "api/visitor/park-info"
                         ).permitAll() // 로그인 관련 API 허용
                         .anyRequest().authenticated()
                 );

@@ -42,6 +42,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
 	implementation 'net.nurigo:sdk:4.3.0'
+
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
 
 tasks.named('test') {

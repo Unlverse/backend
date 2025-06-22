@@ -2,6 +2,7 @@ package com.tikkeul.mote.service;
 
 import com.tikkeul.mote.dto.ParkListResponse;
 import com.tikkeul.mote.dto.ParkResponse;
+import com.tikkeul.mote.dto.VisitorParkInfoResponse;
 import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.entity.Park;
 import com.tikkeul.mote.entity.ParkingLot;
@@ -11,6 +12,9 @@ import com.tikkeul.mote.repository.ParkingLotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +23,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ParkService {
 
+    private final KakaoMapService KakaoMapService;
     private final ParkRepository parkRepository;
     private final ParkingLotRepository parkingLotRepository;
 
@@ -93,5 +98,42 @@ public class ParkService {
 
         park.setPlate(newPlate);
         parkRepository.save(park);
+    }
+
+    public VisitorParkInfoResponse getParkInfoByPlate(String plate) {
+        Park park = parkRepository.findByPlate(plate)
+                .orElseThrow(() -> new IllegalArgumentException("해당 차량은 현재 주차되어 있지 않습니다."));
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime entered = park.getTimestamp();
+        Duration duration = Duration.between(entered, now);
+        long minutes = duration.toMinutes();
+        long hours = minutes / 60;
+        long remain = minutes % 60;
+
+        // 요금 정보 가져오기
+        ParkingLot lot = parkingLotRepository.findByAdmin(park.getAdmin())
+                .orElseThrow(() -> new IllegalStateException("주차장 정보가 없습니다."));
+
+        int pricePerMinute = lot.getPricePerMinute();
+        int basePrice = lot.getBasePrice();
+
+        // 요금 계산 = 기본요금 + (분당요금 × 경과 분)
+        int totalFee = basePrice + (pricePerMinute * (int) minutes);
+
+        // 문자열로 포맷
+        String durationStr = String.format("%d시간 %d분", hours, remain);
+        String feeStr = String.format("%,d원", totalFee);
+        String timestampStr = entered.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+
+        String address = KakaoMapService.getAddressFromCoordinates(park.getLatitude(), park.getLongitude());
+
+        return VisitorParkInfoResponse.builder()
+                .plate(plate)
+                .timestamp(timestampStr)
+                .duration(durationStr)
+                .fee(feeStr)
+                .address(address)
+                .build();
     }
 }
