@@ -1,7 +1,7 @@
 package com.tikkeul.mote.service;
 
 import com.tikkeul.mote.dto.AdminSignupRequest;
-import com.tikkeul.mote.dto.ParkingLotUpdateRequest;
+import com.tikkeul.mote.dto.AdminInfoUpdateRequest;
 import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.entity.ParkingLot;
 import com.tikkeul.mote.repository.AdminRepository;
@@ -81,17 +81,43 @@ public class AdminService {
         redisTemplate.delete("verify:" + phoneNumber);
     }
 
-    public void updateParkingLot(Admin admin, ParkingLotUpdateRequest request) {
+    public void updateParkingLot(Admin admin, AdminInfoUpdateRequest request) {
         ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin)
                 .orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
 
         if (request.getBasePrice() != null) {
-            parkingLot.setBasePrice(request.getBasePrice()); // ✅ 기본요금 업데이트
+            parkingLot.setBasePrice(request.getBasePrice()); // 기본요금 업데이트
         }
 
         if (request.getPricePerMinute() != null) {
             parkingLot.setPricePerMinute(request.getPricePerMinute());
         }
+        if (request.getTotalLot() != null) {
+            parkingLot.setTotalLot(request.getTotalLot());
+        }
+
+        parkingLotRepository.save(parkingLot);
+    }
+
+    public void updateAdminInfo(Admin admin, AdminInfoUpdateRequest request) {
+        // 관리자 전화번호 업데이트
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
+            admin.setPhoneNumber(request.getPhoneNumber());
+            adminRepository.save(admin);
+        }
+
+        // 주차장 정보 업데이트
+        ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin)
+                .orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
+
+        if (request.getBasePrice() != null) {
+            parkingLot.setBasePrice(request.getBasePrice());
+        }
+
+        if (request.getPricePerMinute() != null) {
+            parkingLot.setPricePerMinute(request.getPricePerMinute());
+        }
+
         if (request.getTotalLot() != null) {
             parkingLot.setTotalLot(request.getTotalLot());
         }

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import com.tikkeul.mote.dto.AdminLoginRequest;
 import com.tikkeul.mote.dto.AdminSignupRequest;
 import com.tikkeul.mote.dto.BusinessVerificationRequest;
-import com.tikkeul.mote.dto.ParkingLotUpdateRequest;
+import com.tikkeul.mote.dto.AdminInfoUpdateRequest;
 import com.tikkeul.mote.service.AdminService;
 import com.tikkeul.mote.service.BusinessVerificationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -68,14 +68,14 @@ public class AdminController {
         }
     }
 
-    @PatchMapping("/update-parking-lot")
-    public ResponseEntity<?> updateParkingLot(
+    @PatchMapping("/update-admin-info")
+    public ResponseEntity<?> updateAdminInfo(
             @AuthenticationPrincipal AdminDetails adminDetails,
-            @RequestBody ParkingLotUpdateRequest request
+            @RequestBody AdminInfoUpdateRequest request
     ) {
         try {
-            adminService.updateParkingLot(adminDetails.getAdmin(), request);
-            return ResponseEntity.ok("주차장 정보가 수정되었습니다.");
+            adminService.updateAdminInfo(adminDetails.getAdmin(), request);
+            return ResponseEntity.ok("회원 정보가 수정되었습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("수정 실패: " + e.getMessage());
         }
