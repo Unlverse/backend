@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "parking_lot", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "parking_lot_name")
-})
+@Table(name = "parking_lot")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,7 +21,7 @@ public class ParkingLot {
     @JoinColumn(name = "admin_id")
     private Admin admin;
 
-    @Column(name = "parking_lot_name", nullable = false, unique = true, length = 100)
+    @Column(name = "parking_lot_name", nullable = false, length = 100)
     private String parkingLotName;
 
     @Column(nullable = false, name = "base_price")

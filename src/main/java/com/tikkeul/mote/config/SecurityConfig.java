@@ -4,6 +4,7 @@ import com.tikkeul.mote.security.AdminDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -46,8 +47,9 @@ public class SecurityConfig {
                                 "/api/admin/verify-business",
                                 "/api/phone/send",
                                 "/api/phone/verify",
-                                "api/visitor/park-info"
-                        ).permitAll() // 로그인 관련 API 허용
+                                "/api/visitor/park-info"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/entry-request").permitAll()
                         .anyRequest().authenticated()
                 );
 
