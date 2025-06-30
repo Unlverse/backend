@@ -69,6 +69,7 @@ public class AdminService {
 
         ParkingLot lot = ParkingLot.builder()
                 .admin(admin)
+                .parkingLotName(request.getParkingLotName())
                 .basePrice(request.getBasePrice())
                 .pricePerMinute(request.getPricePerMinute())
                 .totalLot(request.getTotalLot())

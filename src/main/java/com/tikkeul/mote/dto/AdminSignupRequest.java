@@ -14,8 +14,9 @@ public class AdminSignupRequest {
     private String name;            // 관리자 이름
     private String phoneNumber;     // 전화번호
     private String phoneAuthCode;   // 인증번호
-    private Integer basePrice;         // 기본 요금
+    private String parkingLotName;  // 주차장 이름
+    private Integer basePrice;      // 기본 요금
     private Integer pricePerMinute; // 분 당 가격
-    private Integer totalLot;     // 주차면 수
+    private Integer totalLot;       // 주차면 수
 
 }
