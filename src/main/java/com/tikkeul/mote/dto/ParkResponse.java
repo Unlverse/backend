@@ -21,6 +21,7 @@ public class ParkResponse {
 
     private String duration;
     private String fee;
+    private String imagePath;
 
     public static ParkResponse fromEntity(Park park, int basePrice, int pricePerMinute) {
         LocalDateTime now = LocalDateTime.now();
@@ -43,6 +44,7 @@ public class ParkResponse {
                 .timestamp(enterTime)
                 .duration(durationStr)
                 .fee(formattedFee)
+                .imagePath(park.getImagePath())
                 .build();
     }
 }
