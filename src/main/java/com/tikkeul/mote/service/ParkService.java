@@ -10,14 +10,18 @@ import com.tikkeul.mote.exception.FullParkingLotException;
 import com.tikkeul.mote.repository.ParkRepository;
 import com.tikkeul.mote.repository.ParkingLotRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +31,7 @@ public class ParkService {
     private final ParkRepository parkRepository;
     private final ParkingLotRepository parkingLotRepository;
 
-    public void savePark(Admin admin, Map<String, Object> gps, Map<String, Object> ocr) {
+    public void savePark(Admin admin, Map<String, Object> gps, Map<String, Object> ocr, String imagePath) {
 
         // 1. 주차장 정보 가져오기
         ParkingLot lot = parkingLotRepository.findByAdmin(admin)
@@ -47,6 +51,7 @@ public class ParkService {
                 .plate((String) ocr.get("plate"))
                 .latitude(((Number) gps.get("latitude")).doubleValue())
                 .longitude(((Number) gps.get("longitude")).doubleValue())
+                .imagePath(imagePath)
                 .build();
 
         parkRepository.save(park);
@@ -75,6 +80,28 @@ public class ParkService {
                 .totalLot(lot.getTotalLot())
                 .parkLogs(parkResponses)
                 .build();
+    }
+
+    public Resource loadParkImageForAdmin(Long parkId, Admin admin) {
+        Park park = parkRepository.findById(parkId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 차량 정보가 없습니다."));
+
+        // 관리자가 자신의 차량 정보만 조회 가능
+        if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
+            throw new SecurityException("본인 주차장의 차량 정보만 조회할 수 있습니다.");
+        }
+
+        String imagePath = park.getImagePath();
+        if (imagePath == null || imagePath.isBlank()) {
+            throw new IllegalStateException("이미지 경로가 없습니다.");
+        }
+
+        File file = new File("uploads", imagePath.replace("/uploads/", ""));
+        if (!file.exists()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "이미지 파일을 찾을 수 없습니다.");
+        }
+
+        return new FileSystemResource(file);
     }
 
     public void deletePark(Long parkId, Admin admin) {
