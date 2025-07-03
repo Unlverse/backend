@@ -42,7 +42,7 @@ public class EntryRequestController {
 
     @DeleteMapping("/{entryId}")
     public ResponseEntity<String> deleteEntryRequest(
-            @PathVariable Long entryId,
+            @PathVariable("entryId") Long entryId,
             @AuthenticationPrincipal AdminDetails adminDetails) {
         try {
             entryRequestService.deleteRequest(entryId, adminDetails.getAdmin());
