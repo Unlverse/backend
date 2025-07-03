@@ -39,6 +39,14 @@ public class ImageController {
         // 서버에 이미지 저장
         String projectRoot = System.getProperty("user.dir");
         String uploadDir = projectRoot + File.separator + "uploads";
+
+        // 디렉토리가 없으면 생성
+        File uploadDirFile = new File(uploadDir);
+        if (!uploadDirFile.exists()) {
+            uploadDirFile.mkdirs();
+        }
+
+        // 파일명 생성
         String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         File savedFile = new File(uploadDir, filename);
         file.transferTo(savedFile);
@@ -67,7 +75,7 @@ public class ImageController {
 
     @GetMapping("/{parkId}")
     public ResponseEntity<Resource> getParkImage(
-            @PathVariable Long parkId,
+            @PathVariable("parkId") Long parkId,
             @AuthenticationPrincipal AdminDetails adminDetails) {
 
         Resource image = parkService.loadParkImageForAdmin(parkId, adminDetails.getAdmin());
