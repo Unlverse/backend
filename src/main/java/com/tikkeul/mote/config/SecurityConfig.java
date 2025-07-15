@@ -47,7 +47,10 @@ public class SecurityConfig {
                                 "/api/admin/verify-business",
                                 "/api/phone/send",
                                 "/api/phone/verify",
-                                "/api/visitor/park-info"
+                                "/api/visitor/park-info",
+                                "/api/visitor/not-found-info",
+                                "/api/visitor/park-info/{parkId}"
+
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/entry-request").permitAll()
                         .anyRequest().authenticated()
