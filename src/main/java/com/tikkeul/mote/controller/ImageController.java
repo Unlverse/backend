@@ -9,6 +9,7 @@ import com.tikkeul.mote.service.ParkService;
 import org.springframework.core.io.Resource;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.imaging.ImageReadException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -49,28 +50,42 @@ public class ImageController {
         // 파일명 생성
         String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         File savedFile = new File(uploadDir, filename);
-        file.transferTo(savedFile);
-
-        // GPS 추출
-        Map<String, Object> gpsInfo = imageService.extractGpsInfo(savedFile);
-
-        // OCR 추출
-        String ocrJson = imageService.sendToOcrServer(savedFile);
-        Map<String, Object> ocrResult = objectMapper.readValue(ocrJson, new TypeReference<>() {});
 
         // 저장할 이미지 경로 문자열 (예: 서버 경로 or public URL)
         String imagePath = "/uploads/" + filename; // 프론트가 접근할 수 있는 경로로 설정
 
-        // DB에 저장
-        Admin admin = adminDetails.getAdmin();
-        parkService.savePark(admin, gpsInfo, ocrResult, imagePath);
+        try {
+            // 1. 이미지 저장
+            file.transferTo(savedFile);
 
-        // 응답
-        return ResponseEntity.ok(Map.of(
-                "gps", gpsInfo,
-                "ocr", ocrResult,
-                "imagePath", imagePath
-        ));
+            // 2. GPS 추출
+            Map<String, Object> gpsInfo = imageService.extractGpsInfo(savedFile);
+
+            // 3. OCR 추출
+            String ocrJson = imageService.sendToOcrServer(savedFile);
+            Map<String, Object> ocrResult = objectMapper.readValue(ocrJson, new TypeReference<>() {});
+
+            // 4. DB 저장
+            Admin admin = adminDetails.getAdmin();
+            parkService.savePark(admin, gpsInfo, ocrResult, imagePath);
+
+            // 5. 성공 응답
+            return ResponseEntity.ok(Map.of(
+                    "gps", gpsInfo,
+                    "ocr", ocrResult,
+                    "imagePath", imagePath
+            ));
+
+        } catch (Exception e) {
+            // 실패 시 이미지 삭제
+            if (savedFile.exists()) {
+                savedFile.delete();
+            }
+
+            // 에러 메시지 반환
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/{parkId}")
