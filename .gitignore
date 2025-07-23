@@ -5,6 +5,10 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+### 업로드 이미지 무시 ###
+uploads/*
+!uploads/.gitkeep
+
 ### STS ###
 .apt_generated
 .classpath

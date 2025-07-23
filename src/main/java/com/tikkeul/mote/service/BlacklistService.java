@@ -63,6 +63,18 @@ public class BlacklistService {
                 .collect(Collectors.toList());
     }
 
+    public void updateReason(Admin admin, Long blackId, String newReason) {
+        Blacklist blacklist = blacklistRepository.findById(blackId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 차량이 블랙리스트에 존재하지 않습니다."));
+
+        if (!blacklist.getAdmin().getAdminId().equals(admin.getAdminId())) {
+            throw new SecurityException("본인의 블랙리스트 항목만 수정할 수 있습니다.");
+        }
+
+        blacklist.setReason(newReason);
+        blacklistRepository.save(blacklist);
+    }
+
     // 블랙리스트 차량 삭제
     public void delete(Admin admin, Long blackId) {
         if (admin == null) {
@@ -77,5 +89,9 @@ public class BlacklistService {
         }
 
         blacklistRepository.delete(blacklist);
+    }
+
+    public boolean existsByAdminAndPlate(Admin admin, String plate) {
+        return blacklistRepository.existsByAdminAndBlackPlate(admin, plate);
     }
 }

@@ -34,42 +34,40 @@ public class ImageController {
     @PostMapping("/upload")
     public ResponseEntity<?> handleUpload(
             @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "force", defaultValue = "false") boolean force,
             @AuthenticationPrincipal AdminDetails adminDetails
     ) throws IOException, ImageReadException {
 
-        // 서버에 이미지 저장
+        // 1. 업로드 디렉토리 설정
         String projectRoot = System.getProperty("user.dir");
         String uploadDir = projectRoot + File.separator + "uploads";
 
-        // 디렉토리가 없으면 생성
         File uploadDirFile = new File(uploadDir);
         if (!uploadDirFile.exists()) {
             uploadDirFile.mkdirs();
         }
 
-        // 파일명 생성
+        // 2. 파일명 생성 및 파일 객체 준비
         String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         File savedFile = new File(uploadDir, filename);
-
-        // 저장할 이미지 경로 문자열 (예: 서버 경로 or public URL)
-        String imagePath = "/uploads/" + filename; // 프론트가 접근할 수 있는 경로로 설정
+        String imagePath = "/uploads/" + filename;
 
         try {
-            // 1. 이미지 저장
+            // 3. 이미지 저장
             file.transferTo(savedFile);
 
-            // 2. GPS 추출
+            // 4. GPS 정보 추출
             Map<String, Object> gpsInfo = imageService.extractGpsInfo(savedFile);
 
-            // 3. OCR 추출
+            // 5. OCR 정보 추출
             String ocrJson = imageService.sendToOcrServer(savedFile);
             Map<String, Object> ocrResult = objectMapper.readValue(ocrJson, new TypeReference<>() {});
 
-            // 4. DB 저장
+            // 6. 주차 정보 저장
             Admin admin = adminDetails.getAdmin();
-            parkService.savePark(admin, gpsInfo, ocrResult, imagePath);
+            parkService.savePark(admin, gpsInfo, ocrResult, imagePath, force);
 
-            // 5. 성공 응답
+            // 7. 성공 응답
             return ResponseEntity.ok(Map.of(
                     "gps", gpsInfo,
                     "ocr", ocrResult,
@@ -82,7 +80,7 @@ public class ImageController {
                 savedFile.delete();
             }
 
-            // 에러 메시지 반환
+            // 예외 응답 반환
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }

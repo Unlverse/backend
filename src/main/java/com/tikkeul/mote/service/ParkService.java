@@ -31,11 +31,19 @@ public class ParkService {
     private final KakaoMapService KakaoMapService;
     private final ParkRepository parkRepository;
     private final ParkingLotRepository parkingLotRepository;
+    private final BlacklistService blacklistService;
 
-    public void savePark(Admin admin, Map<String, Object> gps, Map<String, Object> ocr, String imagePath) {
+    public void savePark(Admin admin, Map<String, Object> gps, Map<String, Object> ocr, String imagePath, boolean force) {
 
         // 1. plate 추출
         String plate = (String) ocr.get("plate");
+
+        // 2. 블랙리스트 체크
+        if (!"NOT_FOUND".equalsIgnoreCase(plate) && !force) {
+            if (blacklistService.existsByAdminAndPlate(admin, plate)) {
+                throw new IllegalStateException("해당 차량은 블랙리스트에 등록되어 있습니다. 등록하시겠습니까?");
+            }
+        }
 
         // 2. plate 중복 체크
         if (!"NOT_FOUND".equalsIgnoreCase(plate)) {
@@ -100,6 +108,14 @@ public class ParkService {
 
         if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
             throw new SecurityException("본인 주차장의 주차 정보만 수정할 수 있습니다.");
+        }
+
+        // 중복 검사 (NOT_FOUND는 제외)
+        if (!"NOT_FOUND".equalsIgnoreCase(newPlate)) {
+            boolean exists = parkRepository.existsByPlate(newPlate);
+            if (exists && !park.getPlate().equalsIgnoreCase(newPlate)) {
+                throw new IllegalStateException("이미 입차 중인 차량번호입니다.");
+            }
         }
 
         park.setPlate(newPlate);
