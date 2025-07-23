@@ -7,11 +7,13 @@ import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.security.AdminDetails;
 import com.tikkeul.mote.service.BlacklistService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/blacklist")
@@ -45,7 +47,7 @@ public class BlacklistController {
     // ParkId로 블랙리스트 등록
     @PostMapping("/{parkId}")
     public ResponseEntity<?> addBlacklistFromPark(
-            @PathVariable Long parkId,
+            @PathVariable(name = "parkId") Long parkId,
             @RequestBody BlacklistFromParkRequest request,
             @AuthenticationPrincipal AdminDetails adminDetails) {
         try {
@@ -83,10 +85,27 @@ public class BlacklistController {
         }
     }
 
+    @PatchMapping("/{blackId}")
+    public ResponseEntity<?> updateBlacklistReason(
+            @PathVariable(name = "blackId") Long blackId,
+            @RequestBody Map<String, String> request,
+            @AuthenticationPrincipal AdminDetails adminDetails) {
+
+        try {
+            String newReason = request.get("reason");
+            blacklistService.updateReason(adminDetails.getAdmin(), blackId, newReason);
+            return ResponseEntity.ok("사유가 수정되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
     // 블랙리스트 차량 삭제
     @DeleteMapping("/{blackId}")
     public ResponseEntity<?> deleteBlacklist(
-            @PathVariable Long blackId,
+            @PathVariable(name = "blackId") Long blackId,
             @AuthenticationPrincipal AdminDetails adminDetails) {
         try {
             if (adminDetails == null || adminDetails.getAdmin() == null) {
