@@ -22,16 +22,16 @@ public class Park {
     @Column(nullable = false, length = 50)
     private String plate;
 
-    @Column(nullable = false)
+    @Column
     private Double latitude;
 
-    @Column(nullable = false)
+    @Column
     private Double longitude;
 
     @Column(name = "timestamp", nullable = false, updatable = false)
     private LocalDateTime timestamp;
 
-    @Column(name = "image_path", nullable = false, length = 500)
+    @Column(name = "image_path", length = 500)
     private String imagePath;
 
     @ManyToOne(fetch = FetchType.LAZY)
