@@ -38,13 +38,6 @@ public class ParkService {
         // 1. plate 추출
         String plate = (String) ocr.get("plate");
 
-        // 2. 블랙리스트 체크
-        if (!"NOT_FOUND".equalsIgnoreCase(plate) && !force) {
-            if (blacklistService.existsByAdminAndPlate(admin, plate)) {
-                throw new IllegalStateException("해당 차량은 블랙리스트에 등록되어 있습니다. 등록하시겠습니까?");
-            }
-        }
-
         // 2. plate 중복 체크
         if (!"NOT_FOUND".equalsIgnoreCase(plate)) {
             boolean exists = parkRepository.existsByPlate(plate);
@@ -53,25 +46,78 @@ public class ParkService {
             }
         }
 
-        // 3. 주차장 정보 가져오기
+        // 3. 블랙리스트 체크
+        if (!"NOT_FOUND".equalsIgnoreCase(plate) && !force) {
+            if (blacklistService.existsByAdminAndPlate(admin, plate)) {
+                throw new IllegalStateException("해당 차량은 블랙리스트에 등록되어 있습니다. 등록하시겠습니까?");
+            }
+        }
+
+        // 4. 주차장 정보 가져오기
         ParkingLot lot = parkingLotRepository.findByAdmin(admin)
                 .orElseThrow(() -> new IllegalStateException("해당 관리자의 주차장 정보가 없습니다."));
 
-        // 4. 현재 차량 수 조회
+        // 5. 현재 차량 수 조회
         long currentCount = parkRepository.countByAdmin(admin);
 
-        // 5. totalLot 초과 여부 확인
+        // 6. totalLot 초과 여부 확인
         if (currentCount >= lot.getTotalLot()) {
             throw new FullParkingLotException("주차장이 가득 찼습니다. 더 이상 차량을 등록할 수 없습니다.");
         }
 
-        // 6. 차량 등록
+        // 7. 차량 등록
         Park park = Park.builder()
                 .admin(admin)
                 .plate((String) ocr.get("plate"))
                 .latitude(((Number) gps.get("latitude")).doubleValue())
                 .longitude(((Number) gps.get("longitude")).doubleValue())
                 .imagePath(imagePath)
+                .build();
+
+        parkRepository.save(park);
+    }
+
+    public void manualSavePark(Admin admin, String plate, boolean force) {
+
+        if (plate == null || plate.trim().isEmpty()) {
+            throw new IllegalArgumentException("차량번호는 비워둘 수 없습니다.");
+        }
+
+        // 1. plate 중복 체크
+        if (!"NOT_FOUND".equalsIgnoreCase(plate)) {
+            boolean exists = parkRepository.existsByPlate(plate);
+            if (exists) {
+                throw new IllegalStateException("이미 입차 중인 차량입니다.");
+            }
+        }
+
+        // 2. 블랙리스트 체크
+        if (!"NOT_FOUND".equalsIgnoreCase(plate) && !force) {
+            if (blacklistService.existsByAdminAndPlate(admin, plate)) {
+                throw new IllegalStateException("해당 차량은 블랙리스트에 등록되어 있습니다. 등록하시겠습니까?");
+            }
+        }
+
+        // 3. 주차장 정보 가져오기
+        ParkingLot lot = parkingLotRepository.findByAdmin(admin)
+                .orElseThrow(() -> new IllegalStateException("해당 관리자의 주차장 정보가 없습니다."));
+
+        // 4. 현재 차량 수 조회
+        long count = parkRepository.countByAdmin(admin);
+
+        // 5. totalLot 초과 여부 확인
+        if (count >= lot.getTotalLot()) {
+            throw new FullParkingLotException("주차장이 가득 찼습니다. 더 이상 차량을 등록할 수 없습니다.");
+        }
+
+        // 6. 차량 등록
+        Park park = Park.builder()
+                .admin(admin)
+                .plate(plate)
+                .latitude(null)              // GPS 없음
+                .longitude(null)             // GPS 없음
+                .imagePath(null)             // 사진 없음
+                .timestamp(LocalDateTime.now())
                 .build();
 
         parkRepository.save(park);
@@ -122,6 +168,7 @@ public class ParkService {
         parkRepository.save(park);
     }
 
+    // 관리자 주차 정보 조회
     public ParkListResponse getParkListWithStatus(Admin admin) {
 
         // 1. 차량 목록 조회
@@ -147,6 +194,7 @@ public class ParkService {
                 .build();
     }
 
+    // 차량 이미지 조회
     public Resource loadParkImageForAdmin(Long parkId, Admin admin) {
         Park park = parkRepository.findById(parkId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 차량 정보가 없습니다."));
