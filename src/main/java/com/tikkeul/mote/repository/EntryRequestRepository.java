@@ -9,4 +9,5 @@ import java.util.List;
 public interface EntryRequestRepository extends JpaRepository<EntryRequest, Long> {
 
     List<EntryRequest> findByAdmin(Admin admin);
+    long deleteByAdmin(Admin admin);
 }

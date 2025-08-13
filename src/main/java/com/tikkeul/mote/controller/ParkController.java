@@ -73,6 +73,21 @@ public class ParkController {
         }
     }
 
+    @DeleteMapping("/all")
+    public ResponseEntity<?> deleteAll(
+            @AuthenticationPrincipal AdminDetails adminDetails
+    ) {
+        try {
+            if (adminDetails == null || adminDetails.getAdmin() == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "로그인이 필요합니다."));
+            }
+            Map<String, Object> result = parkService.deleteAllParks(adminDetails.getAdmin());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "서버 오류: " + e.getMessage()));
+        }
+    }
+
     @PatchMapping("/{parkId}")
     public ResponseEntity<?> updatePlate(@PathVariable("parkId") Long parkId,
                                          @RequestBody ParkUpdateRequest request,
