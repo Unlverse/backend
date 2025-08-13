@@ -7,10 +7,12 @@ import com.tikkeul.mote.entity.ParkingLot;
 import com.tikkeul.mote.repository.EntryRequestRepository;
 import com.tikkeul.mote.repository.AdminRepository;
 import com.tikkeul.mote.repository.ParkingLotRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,5 +59,11 @@ public class EntryRequestService {
         }
 
         entryRequestRepository.delete(entryRequest);
+    }
+
+    @Transactional
+    public Map<String, Object> deleteAllRequests(Admin admin) {
+        long deleted = entryRequestRepository.deleteByAdmin(admin);
+        return Map.of("deleted", deleted);
     }
 }

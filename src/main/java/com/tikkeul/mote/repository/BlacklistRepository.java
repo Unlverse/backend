@@ -13,4 +13,5 @@ public interface BlacklistRepository extends JpaRepository<Blacklist, Long> {
     boolean existsByAdminAndBlackPlate(Admin admin, String blackPlate);
 
     List<Blacklist> findByAdminOrderByBlackIdAsc(Admin admin);
+    long deleteByAdmin(Admin admin);
 }

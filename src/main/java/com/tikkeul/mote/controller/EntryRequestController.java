@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,6 +50,21 @@ public class EntryRequestController {
             return ResponseEntity.ok("요청이 처리되었습니다.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("삭제 실패: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/all")
+    public ResponseEntity<?> deleteAllEntryRequests(
+            @AuthenticationPrincipal AdminDetails adminDetails
+    ) {
+        try {
+            if (adminDetails == null || adminDetails.getAdmin() == null) {
+                return ResponseEntity.status(401).body("로그인이 필요합니다.");
+            }
+            Map<String, Object> result = entryRequestService.deleteAllRequests(adminDetails.getAdmin());
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
         }

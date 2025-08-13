@@ -6,11 +6,13 @@ import com.tikkeul.mote.entity.Park;
 import com.tikkeul.mote.dto.BlacklistPlateResponse;
 import com.tikkeul.mote.repository.BlacklistRepository;
 import com.tikkeul.mote.repository.ParkRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -89,6 +91,14 @@ public class BlacklistService {
         }
 
         blacklistRepository.delete(blacklist);
+    }
+
+    @Transactional
+    public Map<String, Object> deleteAllBlacklist(Admin admin) {
+        long deleted = blacklistRepository.deleteByAdmin(admin);
+        return Map.of(
+                "deleted", deleted
+        );
     }
 
     public boolean existsByAdminAndPlate(Admin admin, String plate) {

@@ -15,4 +15,5 @@ public interface ParkRepository extends JpaRepository<Park, Long> {
     long countByAdmin(Admin admin);
 
     List<Park> findByAdminAndPlate(Admin admin, String plate);
+    long deleteByAdmin(Admin admin);
 }

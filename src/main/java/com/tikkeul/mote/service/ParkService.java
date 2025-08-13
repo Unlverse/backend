@@ -10,6 +10,7 @@ import com.tikkeul.mote.entity.ParkingLot;
 import com.tikkeul.mote.exception.FullParkingLotException;
 import com.tikkeul.mote.repository.ParkRepository;
 import com.tikkeul.mote.repository.ParkingLotRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -146,6 +147,14 @@ public class ParkService {
         }
 
         parkRepository.delete(park);
+    }
+
+    @Transactional
+    public Map<String, Object> deleteAllParks(Admin admin) {
+        long deleted = parkRepository.deleteByAdmin(admin);
+        return Map.of(
+                "deleted", deleted
+        );
     }
 
     public void updatePlate(Long parkId, String newPlate, Admin admin) {
