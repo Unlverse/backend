@@ -24,6 +24,15 @@ public class ParkingLot {
     @Column(name = "parking_lot_name", nullable = false, length = 100)
     private String parkingLotName;
 
+    @Column(name = "address", nullable = false, length = 255)
+    private String address;
+
+    @Column(name = "parking_lot_latitude", nullable = false)
+    private Double parkingLotLatitude;
+
+    @Column(name = "parking_lot_longitude", nullable = false)
+    private Double parkingLotLongitude;
+
     @Column(nullable = false, name = "base_price")
     private int basePrice;
 

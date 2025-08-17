@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +21,9 @@ public class AdminService {
     private final ParkingLotRepository parkingLotRepository;
     private final StringRedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
+    private final KakaoMapService kakaoMapService;
 
+    @Transactional(rollbackFor = Exception.class)
     public void signup(AdminSignupRequest request) {
         String userName = request.getUsername();
         String businessNo = request.getBusinessNo();
@@ -56,7 +60,7 @@ public class AdminService {
         //  6. 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        //  7. Admin, ParkingLot 저장
+        //  7. Admin 저장
         Admin admin = Admin.builder()
                 .username(userName)
                 .password(encodedPassword)
@@ -67,9 +71,20 @@ public class AdminService {
 
         adminRepository.save(admin);
 
+        // 8) 주소 → 좌표 변환 (필수 값 검증)
+        if (request.getAddress() == null || request.getAddress().isBlank()) {
+            throw new IllegalArgumentException("주차장 주소를 입력해 주세요.");
+        }
+
+        var coord = kakaoMapService.geocodeAddress(request.getAddress());
+
+        //  9. parking_lot 저장
         ParkingLot lot = ParkingLot.builder()
                 .admin(admin)
                 .parkingLotName(request.getParkingLotName())
+                .address(request.getAddress())
+                .parkingLotLatitude(coord.lat())
+                .parkingLotLongitude(coord.lon())
                 .basePrice(request.getBasePrice())
                 .pricePerMinute(request.getPricePerMinute())
                 .totalLot(request.getTotalLot())
@@ -77,7 +92,7 @@ public class AdminService {
 
         parkingLotRepository.save(lot);
 
-        //  7. Redis 키 삭제 (선택)
+        //  10. Redis 키 삭제 (선택)
         redisTemplate.delete("business_verified:" + businessNo);
         redisTemplate.delete("verify:" + phoneNumber);
     }
