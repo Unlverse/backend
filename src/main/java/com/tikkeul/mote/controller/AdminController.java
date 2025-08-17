@@ -9,6 +9,7 @@ import com.tikkeul.mote.dto.AdminInfoUpdateRequest;
 import com.tikkeul.mote.service.AdminService;
 import com.tikkeul.mote.service.BusinessVerificationService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
