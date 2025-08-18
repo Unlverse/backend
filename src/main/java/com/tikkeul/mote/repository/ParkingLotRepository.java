@@ -20,10 +20,9 @@ public interface ParkingLotRepository extends JpaRepository<ParkingLot, Long> {
         SELECT 
            pl.admin_id               AS adminId,
            pl.parking_lot_name       AS name,
+           pl.address                AS address,
            pl.parking_lot_latitude   AS latitude,
            pl.parking_lot_longitude  AS longitude,
-           pl.total_lot              AS totalLot,
-           pl.price_per_minute       AS pricePerMinute,
            (6371 * acos(LEAST(1,
                cos(radians(:lat)) * cos(radians(pl.parking_lot_latitude)) *
                cos(radians(pl.parking_lot_longitude) - radians(:lng)) +

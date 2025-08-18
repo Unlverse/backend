@@ -68,19 +68,17 @@ public class VisitorService {
         List<NearbyParkingLotResponse> mapped = rows.stream().map(row -> {
             Long adminId         = row[0] != null ? ((Number) row[0]).longValue()  : null;
             String name          = row[1] != null ? (String) row[1]                : null;
-            double latitude      = row[2] != null ? ((Number) row[2]).doubleValue(): 0.0;
-            double longitude     = row[3] != null ? ((Number) row[3]).doubleValue(): 0.0;
-            int totalLot         = row[4] != null ? ((Number) row[4]).intValue()   : 0;
-            int pricePerMinute   = row[5] != null ? ((Number) row[5]).intValue()   : 0;
-            double distanceKm    = row[6] != null ? ((Number) row[6]).doubleValue(): 0.0;
+            String address       = row[2] != null ? (String) row[2]                : null;
+            double latitude      = row[3] != null ? ((Number) row[3]).doubleValue(): 0.0;
+            double longitude     = row[4] != null ? ((Number) row[4]).doubleValue(): 0.0;
+            double distanceKm    = row[5] != null ? ((Number) row[5]).doubleValue(): 0.0;
 
             return NearbyParkingLotResponse.builder()
                     .adminId(adminId)
                     .name(name)
+                    .address(address)
                     .latitude(latitude)
                     .longitude(longitude)
-                    .totalLot(totalLot)
-                    .pricePerMinute(pricePerMinute)
                     .distanceKm(distanceKm)
                     .build();
         }).toList();
