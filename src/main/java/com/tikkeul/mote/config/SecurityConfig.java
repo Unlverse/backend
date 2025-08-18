@@ -49,8 +49,9 @@ public class SecurityConfig {
                                 "/api/phone/verify",
                                 "/api/visitor/park-info",
                                 "/api/visitor/not-found-info",
-                                "/api/visitor/park-info/{parkId}"
-
+                                "/api/visitor/park-info/{parkId}",
+                                "/api/visitor/nearby-lots",
+                                "/api/visitor/not-found-info/{adminId}"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/entry-request").permitAll()
                         .anyRequest().authenticated()
