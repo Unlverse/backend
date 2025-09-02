@@ -11,6 +11,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -83,8 +85,11 @@ public class AdminService {
     }
 
     public void updateParkingLot(Admin admin, AdminInfoUpdateRequest request) {
-        ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin)
-                .orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
+        List<ParkingLot> parkingLots = parkingLotRepository.findByAdmin(admin);
+        if(parkingLots.isEmpty()) {
+            throw new IllegalStateException("주차장 정보를 찾을 수 없습니다.");
+        }
+        ParkingLot parkingLot = parkingLots.get(0); // 첫 번째 주차장 선택
 
         if (request.getBasePrice() != null) {
             parkingLot.setBasePrice(request.getBasePrice()); // 기본요금 업데이트
@@ -108,8 +113,11 @@ public class AdminService {
         }
 
         // 주차장 정보 업데이트
-        ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin)
-                .orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
+        List<ParkingLot> parkingLots = parkingLotRepository.findByAdmin(admin);
+        if(parkingLots.isEmpty()) {
+            throw new IllegalStateException("주차장 정보를 찾을 수 없습니다.");
+        }
+        ParkingLot parkingLot = parkingLots.get(0); // 첫 번째 주차장 선택
 
         if (request.getBasePrice() != null) {
             parkingLot.setBasePrice(request.getBasePrice());

@@ -34,8 +34,11 @@ public class ParkService {
     public void savePark(Admin admin, Map<String, Object> gps, Map<String, Object> ocr, String imagePath) {
 
         // 1. 주차장 정보 가져오기
-        ParkingLot lot = parkingLotRepository.findByAdmin(admin)
-                .orElseThrow(() -> new IllegalStateException("해당 관리자의 주차장 정보가 없습니다."));
+        List<ParkingLot> lots = parkingLotRepository.findByAdmin(admin);
+        if (lots.isEmpty()) {
+            throw new IllegalStateException("해당 관리자의 주차장 정보가 없습니다.");
+        }
+        ParkingLot lot = lots.get(0); // 첫 번째 주차장 선택
 
         // 2. 현재 차량 수 조회
         long currentCount = parkRepository.countByAdmin(admin);
@@ -62,8 +65,11 @@ public class ParkService {
         List<Park> parks = parkRepository.findByAdmin(admin);
 
         // 2. 주차장 정보 조회 (단가, 총 대수 등)
-        ParkingLot lot = parkingLotRepository.findByAdmin(admin)
-                .orElseThrow(() -> new IllegalStateException("주차장 정보가 없습니다."));
+        List<ParkingLot> lots = parkingLotRepository.findByAdmin(admin);
+        if (lots.isEmpty()) {
+            throw new IllegalStateException("해당 관리자의 주차장 정보가 없습니다.");
+        }
+        ParkingLot lot = lots.get(0); // 첫 번째 주차장 선택
 
         int pricePerMinute = lot.getPricePerMinute(); //
         // 3. 차량 수
@@ -139,8 +145,11 @@ public class ParkService {
         long remain = minutes % 60;
 
         // 요금 정보 가져오기
-        ParkingLot lot = parkingLotRepository.findByAdmin(park.getAdmin())
-                .orElseThrow(() -> new IllegalStateException("주차장 정보가 없습니다."));
+        List<ParkingLot> lots = parkingLotRepository.findByAdmin(park.getAdmin());
+        if (lots.isEmpty()) {
+            throw new IllegalStateException("주차장 정보가 없습니다.");
+        }
+        ParkingLot lot = lots.get(0); // 첫 번째 주차장 가져오기
 
         int pricePerMinute = lot.getPricePerMinute();
         int basePrice = lot.getBasePrice();

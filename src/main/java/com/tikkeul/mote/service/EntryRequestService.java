@@ -39,9 +39,8 @@ public class EntryRequestService {
 
         return requests.stream()
                 .map(entryRequest -> {
-                    String parkingLotName = parkingLotRepository.findByAdmin(entryRequest.getAdmin())
-                            .map(ParkingLot::getParkingLotName)
-                            .orElse("알 수 없음");
+                    List<ParkingLot> parkingLots = parkingLotRepository.findByAdmin(entryRequest.getAdmin());
+                    String parkingLotName = parkingLots.isEmpty() ? "알 수 없음" : parkingLots.get(0).getParkingLotName();
 
                     return EntryRequestResponse.fromEntity(entryRequest, parkingLotName);
                 })
