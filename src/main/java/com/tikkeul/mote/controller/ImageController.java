@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -33,57 +35,66 @@ public class ImageController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> handleUpload(
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("files") MultipartFile[] files,
             @RequestParam(value = "force", defaultValue = "false") boolean force,
             @AuthenticationPrincipal AdminDetails adminDetails
     ) throws IOException, ImageReadException {
 
-        // 1. 업로드 디렉토리 설정
-        String projectRoot = System.getProperty("user.dir");
-        String uploadDir = projectRoot + File.separator + "uploads";
+        List<Map<String, Object>> results = new ArrayList<>();
+        Admin admin = adminDetails.getAdmin();
 
-        File uploadDirFile = new File(uploadDir);
-        if (!uploadDirFile.exists()) {
-            uploadDirFile.mkdirs();
-        }
+        for (MultipartFile file : files) {
+            // 1. 업로드 디렉토리 설정
+            String projectRoot = System.getProperty("user.dir");
+            String uploadDir = projectRoot + File.separator + "uploads";
 
-        // 2. 파일명 생성 및 파일 객체 준비
-        String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        File savedFile = new File(uploadDir, filename);
-        String imagePath = "/uploads/" + filename;
-
-        try {
-            // 3. 이미지 저장
-            file.transferTo(savedFile);
-
-            // 4. GPS 정보 추출
-            Map<String, Object> gpsInfo = imageService.extractGpsInfo(savedFile);
-
-            // 5. OCR 정보 추출
-            String ocrJson = imageService.sendToOcrServer(savedFile);
-            Map<String, Object> ocrResult = objectMapper.readValue(ocrJson, new TypeReference<>() {});
-
-            // 6. 주차 정보 저장
-            Admin admin = adminDetails.getAdmin();
-            parkService.savePark(admin, gpsInfo, ocrResult, imagePath, force);
-
-            // 7. 성공 응답
-            return ResponseEntity.ok(Map.of(
-                    "gps", gpsInfo,
-                    "ocr", ocrResult,
-                    "imagePath", imagePath
-            ));
-
-        } catch (Exception e) {
-            // 실패 시 이미지 삭제
-            if (savedFile.exists()) {
-                savedFile.delete();
+            File uploadDirFile = new File(uploadDir);
+            if (!uploadDirFile.exists()) {
+                uploadDirFile.mkdirs();
             }
 
-            // 예외 응답 반환
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+            // 2. 파일명 생성 및 파일 객체 준비
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            File savedFile = new File(uploadDir, filename);
+            String imagePath = "/uploads/" + filename;
+
+            try {
+                // 3. 이미지 저장
+                file.transferTo(savedFile);
+
+                // 4. GPS 정보 추출
+                Map<String, Object> gpsInfo = imageService.extractGpsInfo(savedFile);
+
+                // 5. OCR 정보 추출
+                String ocrJson = imageService.sendToOcrServer(savedFile);
+                Map<String, Object> ocrResult = objectMapper.readValue(ocrJson, new TypeReference<>() {});
+
+                // 6. 주차 정보 저장
+                parkService.savePark(admin, gpsInfo, ocrResult, imagePath, force);
+
+                // 7. 성공 응답
+                results.add(Map.of(
+                        "fileName", file.getOriginalFilename(),
+                        "status", "success",
+                        "gps", gpsInfo,
+                        "ocr", ocrResult,
+                        "imagePath", imagePath
+                ));
+
+            } catch (Exception e) {
+                // 실패 시 이미지 삭제
+                if (savedFile.exists()) {
+                    savedFile.delete();
+                }
+
+                results.add(Map.of(
+                        "fileName", file.getOriginalFilename(),
+                        "status", "error",
+                        "message", e.getMessage()
+                ));
+            }
         }
+        return ResponseEntity.ok(results);
     }
 
     @GetMapping("/{parkId}")
