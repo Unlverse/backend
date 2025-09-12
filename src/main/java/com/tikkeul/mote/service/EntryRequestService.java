@@ -21,12 +21,15 @@ public class EntryRequestService {
 
     private final EntryRequestRepository entryRequestRepository;
     private final ParkingLotRepository parkingLotRepository;
+    private final AdminRepository adminRepository;
 
-    public EntryRequest createRequest(String parkingLotName, String newPlate) {
-        ParkingLot parkingLot = parkingLotRepository.findByParkingLotName(parkingLotName)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주차장을 찾을 수 없습니다."));
+    public EntryRequest createRequest(Long adminId, String newPlate) {
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 관리자를 찾을 수 없습니다."));
 
-        Admin admin = parkingLot.getAdmin();
+        if (entryRequestRepository.existsByAdminAndNewPlate(admin, newPlate)) {
+            throw new IllegalStateException("이미 처리 대기 중인 입차 요청입니다.");
+        }
 
         EntryRequest request = EntryRequest.builder()
                 .admin(admin)
@@ -59,6 +62,22 @@ public class EntryRequestService {
         }
 
         entryRequestRepository.delete(entryRequest);
+    }
+
+    @Transactional
+    public void deleteSelectedRequests(Admin admin, List<Long> requestIds) {
+        List<EntryRequest> requestsToDelete = entryRequestRepository.findAllById(requestIds);
+
+        if (requestsToDelete.size() != requestIds.size()) {
+            throw new IllegalArgumentException("존재하지 않는 입차 요청 ID가 포함되어 있습니다.");
+        }
+
+        for (EntryRequest request : requestsToDelete) {
+            if (!request.getAdmin().getAdminId().equals(admin.getAdminId())) {
+                throw new IllegalStateException("본인 주차장의 항목만 삭제할 수 있습니다.");
+            }
+        }
+        entryRequestRepository.deleteAllByIdInBatch(requestIds);
     }
 
     @Transactional

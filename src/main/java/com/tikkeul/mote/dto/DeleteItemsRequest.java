@@ -1,12 +1,11 @@
 package com.tikkeul.mote.dto;
 
-
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
 
 @Getter
 @Setter
-public class EntryCreateRequest {
-    private Long adminId;
-    private String newPlate;
+public class DeleteItemsRequest {
+    private List<Long> ids;
 }

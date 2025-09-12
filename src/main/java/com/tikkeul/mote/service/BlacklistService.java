@@ -101,6 +101,23 @@ public class BlacklistService {
         );
     }
 
+    @Transactional
+    public void deleteSelectedBlacklists(Admin admin, List<Long> blacklistIds) {
+        List<Blacklist> blacklistsToDelete = blacklistRepository.findAllById(blacklistIds);
+
+        if (blacklistsToDelete.size() != blacklistIds.size()) {
+            throw new IllegalArgumentException("존재하지 않는 블랙리스트 ID가 포함되어 있습니다.");
+        }
+
+        for (Blacklist blacklist : blacklistsToDelete) {
+            if (!blacklist.getAdmin().getAdminId().equals(admin.getAdminId())) {
+                throw new IllegalStateException("본인 주차장의 항목만 삭제할 수 있습니다.");
+            }
+        }
+
+        blacklistRepository.deleteAllByIdInBatch(blacklistIds);
+    }
+
     public boolean existsByAdminAndPlate(Admin admin, String plate) {
         return blacklistRepository.existsByAdminAndBlackPlate(admin, plate);
     }
