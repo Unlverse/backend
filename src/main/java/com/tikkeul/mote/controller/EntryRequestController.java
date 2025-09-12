@@ -1,5 +1,6 @@
 package com.tikkeul.mote.controller;
 
+import com.tikkeul.mote.dto.DeleteItemsRequest;
 import com.tikkeul.mote.dto.EntryCreateRequest;
 import com.tikkeul.mote.dto.EntryRequestResponse;
 import com.tikkeul.mote.entity.EntryRequest;
@@ -24,7 +25,7 @@ public class EntryRequestController {
     @PostMapping
     public ResponseEntity<String> createEntryRequest(@RequestBody EntryCreateRequest request) {
         try {
-            entryRequestService.createRequest(request.getParkingLotName(), request.getNewPlate());
+            entryRequestService.createRequest(request.getAdminId(), request.getNewPlate());
             return ResponseEntity.ok("입차 요청이 전달되었습니다.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("요청 실패: " + e.getMessage());
@@ -52,6 +53,20 @@ public class EntryRequestController {
             return ResponseEntity.badRequest().body("삭제 실패: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/selected")
+    public ResponseEntity<String> deleteSelectedEntryRequests(
+            @RequestBody DeleteItemsRequest request,
+            @AuthenticationPrincipal AdminDetails adminDetails) {
+        try {
+            entryRequestService.deleteSelectedRequests(adminDetails.getAdmin(), request.getIds());
+            return ResponseEntity.ok("선택된 요청이 삭제되었습니다.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
         }
     }
 

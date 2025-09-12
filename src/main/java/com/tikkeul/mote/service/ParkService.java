@@ -150,6 +150,22 @@ public class ParkService {
     }
 
     @Transactional
+    public void deleteSelectedParks(Admin admin, List<Long> parkIds) {
+        List<Park> parksToDelete = parkRepository.findAllById(parkIds);
+
+        if (parksToDelete.size() != parkIds.size()) {
+            throw new IllegalArgumentException("존재하지 않는 주차 ID가 포함되어 있습니다.");
+        }
+
+        for (Park park : parksToDelete) {
+            if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
+                throw new IllegalStateException("본인 주차장의 항목만 삭제할 수 있습니다.");
+            }
+        }
+        parkRepository.deleteAllByIdInBatch(parkIds);
+    }
+
+    @Transactional
     public Map<String, Object> deleteAllParks(Admin admin) {
         long deleted = parkRepository.deleteByAdmin(admin);
         return Map.of(

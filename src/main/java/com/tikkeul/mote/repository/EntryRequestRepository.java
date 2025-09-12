@@ -10,4 +10,5 @@ public interface EntryRequestRepository extends JpaRepository<EntryRequest, Long
 
     List<EntryRequest> findByAdmin(Admin admin);
     long deleteByAdmin(Admin admin);
+    boolean existsByAdminAndNewPlate(Admin admin, String newPlate);
 }
