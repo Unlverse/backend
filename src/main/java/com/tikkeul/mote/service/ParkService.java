@@ -6,9 +6,11 @@ import com.tikkeul.mote.dto.VisitorNotFoundResponse;
 import com.tikkeul.mote.dto.VisitorParkInfoResponse;
 import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.entity.Park;
+import com.tikkeul.mote.entity.ParkingHistory;
 import com.tikkeul.mote.entity.ParkingLot;
 import com.tikkeul.mote.exception.FullParkingLotException;
 import com.tikkeul.mote.repository.ParkRepository;
+import com.tikkeul.mote.repository.ParkingHistoryRepository;
 import com.tikkeul.mote.repository.ParkingLotRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,8 @@ import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +37,7 @@ public class ParkService {
     private final ParkRepository parkRepository;
     private final ParkingLotRepository parkingLotRepository;
     private final BlacklistService blacklistService;
+    private final ParkingHistoryRepository parkingHistoryRepository;
 
     public void savePark(Admin admin, Map<String, Object> gps, Map<String, Object> ocr, String imagePath, boolean force) {
 
@@ -124,15 +129,7 @@ public class ParkService {
         parkRepository.save(park);
     }
 
-    public void deletePark(Long parkId, Admin admin) {
-        Park park = parkRepository.findById(parkId)
-                .orElseThrow(() -> new IllegalArgumentException("주차 정보가 존재하지 않습니다."));
-
-        if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
-            throw new SecurityException("본인 주차장의 주차 정보만 삭제할 수 있습니다.");
-        }
-
-        // 이미지 삭제
+    private void deleteParkImage(Park park) {
         String imagePath = park.getImagePath();
         if (imagePath != null && !imagePath.isBlank()) {
             String filename = imagePath.startsWith("/uploads/")
@@ -145,32 +142,73 @@ public class ParkService {
                 file.delete();
             }
         }
+    }
 
+    private void processExitAndLogHistory(Park park, ParkingLot parkingLot) {
+        LocalDateTime exitTime = LocalDateTime.now();
+        long minutesParked = ChronoUnit.MINUTES.between(park.getTimestamp(), exitTime);
+        int fee = 0;
+        if (minutesParked > 0) {
+            int tenMinuteBlocks = (int) Math.ceil(minutesParked / 10.0);
+            fee = parkingLot.getBasePrice() + tenMinuteBlocks * parkingLot.getPricePerMinute();
+        }
+
+        ParkingHistory history = ParkingHistory.builder()
+                .admin(park.getAdmin())
+                .historyPlate(park.getPlate())
+                .entryTime(park.getTimestamp())
+                .exitTime(exitTime)
+                .fee(fee)
+                .build();
+        parkingHistoryRepository.save(history);
+    }
+
+    public void deletePark(Long parkId, Admin admin) {
+        Park park = parkRepository.findById(parkId)
+                .orElseThrow(() -> new IllegalArgumentException("주차 정보가 존재하지 않습니다."));
+
+        if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
+            throw new SecurityException("본인 주차장의 주차 정보만 삭제할 수 있습니다.");
+        }
+
+        ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin)
+                .orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
+
+        deleteParkImage(park);
+        processExitAndLogHistory(park, parkingLot);
         parkRepository.delete(park);
+    }
+
+    @Transactional
+    public void deleteAllParks(Admin admin) {
+        List<Park> parksToDelete = parkRepository.findByAdmin(admin);
+        if (parksToDelete.isEmpty()) return;
+        ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin).orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
+
+        for (Park park : parksToDelete) {
+            deleteParkImage(park);
+            processExitAndLogHistory(park, parkingLot);
+        }
+        parkRepository.deleteAllInBatch(parksToDelete);
     }
 
     @Transactional
     public void deleteSelectedParks(Admin admin, List<Long> parkIds) {
         List<Park> parksToDelete = parkRepository.findAllById(parkIds);
+        if (parksToDelete.size() != parkIds.size()) { throw new IllegalArgumentException("존재하지 않는 주차 ID가 포함되어 있습니다."); }
+        ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin).orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
 
-        if (parksToDelete.size() != parkIds.size()) {
-            throw new IllegalArgumentException("존재하지 않는 주차 ID가 포함되어 있습니다.");
-        }
-
+        List<Park> authorizedParks = new ArrayList<>();
         for (Park park : parksToDelete) {
-            if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
-                throw new IllegalStateException("본인 주차장의 항목만 삭제할 수 있습니다.");
-            }
+            if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) { throw new IllegalStateException("삭제 권한이 없는 항목이 포함되어 있습니다.");}
+            authorizedParks.add(park);
         }
-        parkRepository.deleteAllByIdInBatch(parkIds);
-    }
 
-    @Transactional
-    public Map<String, Object> deleteAllParks(Admin admin) {
-        long deleted = parkRepository.deleteByAdmin(admin);
-        return Map.of(
-                "deleted", deleted
-        );
+        for (Park park : authorizedParks) {
+            deleteParkImage(park);
+            processExitAndLogHistory(park, parkingLot);
+        }
+        parkRepository.deleteAllInBatch(authorizedParks);
     }
 
     public void updatePlate(Long parkId, String newPlate, Admin admin) {
@@ -178,7 +216,7 @@ public class ParkService {
                 .orElseThrow(() -> new IllegalArgumentException("주차 정보가 존재하지 않습니다."));
 
         if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
-            throw new SecurityException("본인 주차장의 주차 정보만 수정할 수 있습니다.");
+            throw new SecurityException("본인 주차장의 차량만 수정할 수 있습니다.");
         }
 
         // 중복 검사 (NOT_FOUND는 제외)
