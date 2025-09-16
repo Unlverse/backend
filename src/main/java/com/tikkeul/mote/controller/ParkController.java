@@ -92,8 +92,10 @@ public class ParkController {
             if (adminDetails == null || adminDetails.getAdmin() == null) {
                 return ResponseEntity.status(401).body(Map.of("error", "로그인이 필요합니다."));
             }
-            Map<String, Object> result = parkService.deleteAllParks(adminDetails.getAdmin());
-            return ResponseEntity.ok(result);
+            // 1. 반환 값을 받지 않도록 수정
+            parkService.deleteAllParks(adminDetails.getAdmin());
+            // 2. 성공했다는 의미로 간단한 메시지를 반환
+            return ResponseEntity.ok(Map.of("message", "모든 차량이 출차 처리되었습니다."));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "서버 오류: " + e.getMessage()));
         }
