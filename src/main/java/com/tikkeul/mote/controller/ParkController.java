@@ -58,7 +58,7 @@ public class ParkController {
             }
 
             parkService.deletePark(parkId, adminDetails.getAdmin());
-            return ResponseEntity.ok("삭제 완료");
+            return ResponseEntity.ok("출차 완료");
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body("해당 주차 정보를 찾을 수 없습니다.");
