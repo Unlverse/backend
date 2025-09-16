@@ -42,46 +42,49 @@ public class EntryRequestController {
         return ResponseEntity.ok(list);
     }
 
-    @DeleteMapping("/{entryId}")
-    public ResponseEntity<String> deleteEntryRequest(
+    @PostMapping("/accept/{entryId}")
+    public ResponseEntity<String> acceptEntryRequest(
             @PathVariable("entryId") Long entryId,
             @AuthenticationPrincipal AdminDetails adminDetails) {
         try {
-            entryRequestService.deleteRequest(entryId, adminDetails.getAdmin());
-            return ResponseEntity.ok("요청이 처리되었습니다.");
+            entryRequestService.acceptRequest(entryId, adminDetails.getAdmin());
+            return ResponseEntity.ok("입차 되었습니다.");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("삭제 실패: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
-        }
-    }
-
-    @DeleteMapping("/selected")
-    public ResponseEntity<String> deleteSelectedEntryRequests(
-            @RequestBody DeleteItemsRequest request,
-            @AuthenticationPrincipal AdminDetails adminDetails) {
-        try {
-            entryRequestService.deleteSelectedRequests(adminDetails.getAdmin(), request.getIds());
-            return ResponseEntity.ok("선택된 요청이 삭제되었습니다.");
+            return ResponseEntity.badRequest().body("요청 처리 실패: " + e.getMessage());
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
+            return ResponseEntity.status(409).body("입차 처리 실패: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
         }
     }
 
-    @DeleteMapping("/all")
-    public ResponseEntity<?> deleteAllEntryRequests(
+    @PostMapping("/accept/all")
+    public ResponseEntity<?> acceptAllEntryRequests(
             @AuthenticationPrincipal AdminDetails adminDetails
     ) {
         try {
-            if (adminDetails == null || adminDetails.getAdmin() == null) {
-                return ResponseEntity.status(401).body("로그인이 필요합니다.");
-            }
-            Map<String, Object> result = entryRequestService.deleteAllRequests(adminDetails.getAdmin());
-            return ResponseEntity.ok(result);
+            entryRequestService.acceptAllRequests(adminDetails.getAdmin());
+            return ResponseEntity.ok(Map.of("message", "모든 차량이 입차 되었습니다."));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body("입차 처리 실패: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("서버 오류: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/accept/selected")
+    public ResponseEntity<String> acceptSelectedEntryRequests(
+            @RequestBody DeleteItemsRequest request,
+            @AuthenticationPrincipal AdminDetails adminDetails) {
+        try {
+            entryRequestService.acceptSelectedRequests(adminDetails.getAdmin(), request.getIds());
+            return ResponseEntity.ok("선택된 차량이 입차 되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("요청 처리 실패: " + e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body("입차 실패: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
         }
     }
 }
