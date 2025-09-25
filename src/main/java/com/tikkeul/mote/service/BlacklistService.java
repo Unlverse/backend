@@ -87,7 +87,7 @@ public class BlacklistService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 차량이 블랙리스트에 존재하지 않습니다."));
 
         if (!blacklist.getAdmin().getAdminId().equals(admin.getAdminId())) {
-            throw new SecurityException("본인의 블랙리스트 항목만 삭제할 수 있습니다.");
+            throw new SecurityException("본인 블랙리스트의 항목만 삭제할 수 있습니다.");
         }
 
         blacklistRepository.delete(blacklist);
@@ -106,7 +106,7 @@ public class BlacklistService {
         List<Blacklist> blacklistsToDelete = blacklistRepository.findAllById(blacklistIds);
 
         if (blacklistsToDelete.size() != blacklistIds.size()) {
-            throw new IllegalArgumentException("존재하지 않는 블랙리스트 ID가 포함되어 있습니다.");
+            throw new IllegalArgumentException("존재하지 않는 항목이 포함되어 있습니다.");
         }
 
         for (Blacklist blacklist : blacklistsToDelete) {

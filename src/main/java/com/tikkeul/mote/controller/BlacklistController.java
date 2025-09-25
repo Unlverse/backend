@@ -120,7 +120,7 @@ public class BlacklistController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body("해당 차량이 블랙리스트에 존재하지 않습니다.");
         } catch (SecurityException e) {
-            return ResponseEntity.status(403).body("본인의 블랙리스트 차량만 삭제할 수 있습니다.");
+            return ResponseEntity.status(403).body("본인 블랙리스트의 항목만 삭제할 수 있습니다.");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("서버 오류: " + e.getMessage());

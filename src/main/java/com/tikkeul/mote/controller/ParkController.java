@@ -2,7 +2,6 @@ package com.tikkeul.mote.controller;
 
 import com.tikkeul.mote.dto.*;
 import com.tikkeul.mote.entity.Admin;
-import com.tikkeul.mote.entity.Park;
 import com.tikkeul.mote.exception.FullParkingLotException;
 import com.tikkeul.mote.security.AdminDetails;
 import com.tikkeul.mote.service.ParkService;
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -58,7 +56,7 @@ public class ParkController {
             }
 
             parkService.deletePark(parkId, adminDetails.getAdmin());
-            return ResponseEntity.ok("삭제 완료");
+            return ResponseEntity.ok("출차 완료");
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body("해당 주차 정보를 찾을 수 없습니다.");
