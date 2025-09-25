@@ -2,8 +2,6 @@ package com.tikkeul.mote.service;
 
 import com.tikkeul.mote.dto.ParkListResponse;
 import com.tikkeul.mote.dto.ParkResponse;
-import com.tikkeul.mote.dto.VisitorNotFoundResponse;
-import com.tikkeul.mote.dto.VisitorParkInfoResponse;
 import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.entity.Park;
 import com.tikkeul.mote.entity.ParkingHistory;
@@ -21,9 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -168,7 +164,7 @@ public class ParkService {
                 .orElseThrow(() -> new IllegalArgumentException("주차 정보가 존재하지 않습니다."));
 
         if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
-            throw new SecurityException("본인 주차장의 주차 정보만 삭제할 수 있습니다.");
+            throw new SecurityException("본인 주차장의 항목만 삭제할 수 있습니다.");
         }
 
         ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin)
@@ -195,12 +191,12 @@ public class ParkService {
     @Transactional
     public void deleteSelectedParks(Admin admin, List<Long> parkIds) {
         List<Park> parksToDelete = parkRepository.findAllById(parkIds);
-        if (parksToDelete.size() != parkIds.size()) { throw new IllegalArgumentException("존재하지 않는 주차 ID가 포함되어 있습니다."); }
+        if (parksToDelete.size() != parkIds.size()) { throw new IllegalArgumentException("존재하지 않는 항목이  포함되어 있습니다."); }
         ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin).orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
 
         List<Park> authorizedParks = new ArrayList<>();
         for (Park park : parksToDelete) {
-            if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) { throw new IllegalStateException("삭제 권한이 없는 항목이 포함되어 있습니다.");}
+            if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) { throw new IllegalStateException("본인 주차장의 항목만 처리할 수 있습니다.");}
             authorizedParks.add(park);
         }
 
@@ -216,7 +212,7 @@ public class ParkService {
                 .orElseThrow(() -> new IllegalArgumentException("주차 정보가 존재하지 않습니다."));
 
         if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
-            throw new SecurityException("본인 주차장의 차량만 수정할 수 있습니다.");
+            throw new SecurityException("본인 주차장의 항목만 처리할 수 있습니다.");
         }
 
         // 중복 검사 (NOT_FOUND는 제외)
@@ -264,7 +260,7 @@ public class ParkService {
 
         // 관리자가 자신의 차량 정보만 조회 가능
         if (!park.getAdmin().getAdminId().equals(admin.getAdminId())) {
-            throw new SecurityException("본인 주차장의 차량 정보만 조회할 수 있습니다.");
+            throw new SecurityException("본인 주차장의 항목만 조회할 수 있습니다.");
         }
 
         String imagePath = park.getImagePath();

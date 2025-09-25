@@ -27,7 +27,7 @@ public class EntryRequestService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 관리자를 찾을 수 없습니다."));
 
         if (entryRequestRepository.existsByAdminAndNewPlate(admin, newPlate)) {
-            throw new IllegalStateException("이미 처리 대기 중인 입차 요청입니다.");
+            throw new IllegalStateException("처리 대기 중 입니다.");
         }
 
         EntryRequest request = EntryRequest.builder()
@@ -55,10 +55,10 @@ public class EntryRequestService {
     @Transactional
     public void acceptRequest(Long requestId, Admin admin) {
         EntryRequest entryRequest = entryRequestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 입차 요청입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 항목입니다."));
 
         if (!entryRequest.getAdmin().getAdminId().equals(admin.getAdminId())) {
-            throw new IllegalStateException("본인 주차장만 처리할 수 있습니다.");
+            throw new IllegalStateException("본인 주차장의 항목만 처리할 수 있습니다.");
         }
 
         // ParkService를 호출하여 입차 처리 (force=false)
@@ -84,12 +84,12 @@ public class EntryRequestService {
         List<EntryRequest> selectedRequests = entryRequestRepository.findAllById(requestIds);
 
         if (selectedRequests.size() != requestIds.size()) {
-            throw new IllegalArgumentException("존재하지 않는 입차 요청이 포함되어 있습니다.");
+            throw new IllegalArgumentException("존재하지 않는 항목이 포함되어 있습니다.");
         }
 
         for (EntryRequest request : selectedRequests) {
             if (!request.getAdmin().getAdminId().equals(admin.getAdminId())) {
-                throw new IllegalStateException("본인 주차장만 처리할 수 있습니다.");
+                throw new IllegalStateException("본인 주차장의 항목만 처리할 수 있습니다.");
             }
             parkService.manualSavePark(admin, request.getNewPlate(), false);
         }

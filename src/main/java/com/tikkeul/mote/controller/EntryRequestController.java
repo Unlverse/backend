@@ -3,7 +3,6 @@ package com.tikkeul.mote.controller;
 import com.tikkeul.mote.dto.DeleteItemsRequest;
 import com.tikkeul.mote.dto.EntryCreateRequest;
 import com.tikkeul.mote.dto.EntryRequestResponse;
-import com.tikkeul.mote.entity.EntryRequest;
 import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.service.EntryRequestService;
 import com.tikkeul.mote.security.AdminDetails;
