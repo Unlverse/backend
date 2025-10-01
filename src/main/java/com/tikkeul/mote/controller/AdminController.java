@@ -56,7 +56,7 @@ public class AdminController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+/*
     @PostMapping("/verify-business")
     public ResponseEntity<?> verifyBusiness(@RequestBody BusinessVerificationRequest request) {
         boolean verified = businessVerificationService.verifyAndStore(request.getBusinessNo());
@@ -67,6 +67,8 @@ public class AdminController {
             return ResponseEntity.badRequest().body("유효하지 않은 사업자등록번호입니다.");
         }
     }
+
+ */
 
     @PatchMapping("/update-admin-info")
     public ResponseEntity<?> updateAdminInfo(
