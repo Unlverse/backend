@@ -25,13 +25,13 @@ public class Admin {
     @Column(nullable = false)
     private String password;  // 암호화된 비밀번호
 
-    @Column(name = "business_no", nullable = false, unique = true, length = 10)
+    @Column(name = "business_no", nullable = false, length = 10)
     private String businessNo;  // 사업자등록번호
 
     @Column(nullable = false, length = 50)
     private String name;  // 관리자 이름
 
-    @Column(name = "phone_number", nullable = false, length = 20)
+    @Column(name = "phone_number", nullable = false, unique = true, length = 20)
     private String phoneNumber;
 
     @Column(name = "created_at", nullable = false, updatable = false)
