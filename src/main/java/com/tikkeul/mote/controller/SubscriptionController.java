@@ -27,7 +27,9 @@ public class SubscriptionController {
         try {
             Admin admin = adminDetails.getAdmin();
             Subscription subscription = subscriptionService.addSubscription(admin, request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(subscription);
+            // 성공 시 201 Created 상태 코드와 함께 메시지 및 데이터 반환
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("message", "정기권이 등록되었습니다.", "subscription", subscription));
         } catch (IllegalStateException e) {
             // 중복 등록과 같은 비즈니스 로직 오류
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
