@@ -17,4 +17,7 @@ public interface ParkingHistoryRepository extends JpaRepository<ParkingHistory, 
 
     List<ParkingHistory> findByAdminAndExitTimeBetweenAndHistoryPlateContainingOrderByHistoryIdDesc(Admin admin, LocalDateTime start, LocalDateTime end, String historyPlate);
     List<ParkingHistory> findByAdminAndEntryTimeBetweenAndHistoryPlateContainingOrderByHistoryIdDesc(Admin admin, LocalDateTime start, LocalDateTime end, String historyPlate);
+
+    List<ParkingHistory> findByAdminAndExitTimeBetween(Admin admin, LocalDateTime start, LocalDateTime end);
+    long countByAdminAndEntryTimeBetween(Admin admin, LocalDateTime start, LocalDateTime end);
 }
