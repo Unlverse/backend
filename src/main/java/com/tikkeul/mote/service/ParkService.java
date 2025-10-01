@@ -10,6 +10,7 @@ import com.tikkeul.mote.exception.FullParkingLotException;
 import com.tikkeul.mote.repository.ParkRepository;
 import com.tikkeul.mote.repository.ParkingHistoryRepository;
 import com.tikkeul.mote.repository.ParkingLotRepository;
+import com.tikkeul.mote.repository.SubscriptionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class ParkService {
     private final ParkingLotRepository parkingLotRepository;
     private final BlacklistService blacklistService;
     private final ParkingHistoryRepository parkingHistoryRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     public void savePark(Admin admin, Map<String, Object> gps, Map<String, Object> ocr, String imagePath, boolean force) {
 
@@ -47,6 +50,9 @@ public class ParkService {
                 throw new IllegalStateException("이미 입차 중인 차량입니다.");
             }
         }
+
+        // 2-1. 정기 주차 차량 확인
+        boolean isSubscription = subscriptionRepository.existsByAdminAndSubPlateAndEndDateAfter(admin, plate, LocalDate.now());
 
         // 3. 블랙리스트 체크
         if (!"NOT_FOUND".equalsIgnoreCase(plate) && !force) {
@@ -92,6 +98,9 @@ public class ParkService {
                 throw new IllegalStateException("이미 입차 중인 차량입니다.");
             }
         }
+
+        // 1-1. 정기 주차 차량 확인
+        boolean isSubscription = subscriptionRepository.existsByAdminAndSubPlateAndEndDateAfter(admin, plate, LocalDate.now());
 
         // 2. 블랙리스트 체크
         if (!"NOT_FOUND".equalsIgnoreCase(plate) && !force) {
@@ -142,11 +151,17 @@ public class ParkService {
 
     private void processExitAndLogHistory(Park park, ParkingLot parkingLot) {
         LocalDateTime exitTime = LocalDateTime.now();
-        long minutesParked = ChronoUnit.MINUTES.between(park.getTimestamp(), exitTime);
         int fee = 0;
-        if (minutesParked > 0) {
-            int tenMinuteBlocks = (int) Math.ceil(minutesParked / 10.0);
-            fee = parkingLot.getBasePrice() + tenMinuteBlocks * parkingLot.getPricePerMinute();
+
+        boolean isSubscription = subscriptionRepository.existsByAdminAndSubPlateAndEndDateAfter(
+                park.getAdmin(), park.getPlate(), LocalDate.now()
+        );
+
+        if (!isSubscription) {
+            long minutesParked = ChronoUnit.MINUTES.between(park.getTimestamp(), exitTime);
+            if (minutesParked > 0) {
+                fee = parkingLot.getBasePrice() + ((int) minutesParked * parkingLot.getPricePerMinute());
+            }
         }
 
         ParkingHistory history = ParkingHistory.builder()
@@ -237,12 +252,19 @@ public class ParkService {
         ParkingLot lot = parkingLotRepository.findByAdmin(admin)
                 .orElseThrow(() -> new IllegalStateException("주차장 정보가 없습니다."));
 
-        int pricePerMinute = lot.getPricePerMinute();
         int currentCount = parks.size();
 
         // 3. DTO로 변환
         List<ParkResponse> parkResponses = parks.stream()
-                .map(park -> ParkResponse.fromEntity(park, lot.getBasePrice(), lot.getPricePerMinute()))
+                .map(park -> {
+                    // 정기권 여부를 확인
+                    boolean isSubscription = subscriptionRepository.existsByAdminAndSubPlateAndEndDateAfter(
+                            admin, park.getPlate(), LocalDate.now()
+                    );
+
+                    // 결과를 fromEntity 메소드에 함께 전달
+                    return ParkResponse.fromEntity(park, lot, isSubscription);
+                })
                 .toList();
 
         // 4. 응답 객체 생성
