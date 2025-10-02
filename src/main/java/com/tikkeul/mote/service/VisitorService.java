@@ -125,7 +125,10 @@ public class VisitorService {
         String feeStr = String.format("%,d원", totalFee);
         String timestampStr = entered.format(TS_FMT);
 
-        String address = kakaoMapService.getAddressFromCoordinates(park.getLatitude(), park.getLongitude());
+        String address = "주소 정보 없음"; // 기본값을 설정합니다.
+        if (park.getLatitude() != null && park.getLongitude() != null) {
+            address = kakaoMapService.getAddressFromCoordinates(park.getLatitude(), park.getLongitude());
+        }
 
         return VisitorParkInfoResponse.builder()
                 .plate(park.getPlate())

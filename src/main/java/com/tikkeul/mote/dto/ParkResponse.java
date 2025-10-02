@@ -38,7 +38,7 @@ public class ParkResponse {
 
         // 정기권 차량 여부에 따라 요금 포맷팅
         if (isSubscription) {
-            formattedFee = "정기권"; // 정기권 차량은 "정기권"으로 표시
+            formattedFee = "0원"; // 정기권 차량은 "정기권"으로 표시
         } else {
             // 요금 계산: 기본요금 + 분당요금 * 분
             if (totalMinutes > 0) {
