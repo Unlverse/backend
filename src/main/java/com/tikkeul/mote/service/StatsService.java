@@ -4,8 +4,10 @@ import com.tikkeul.mote.dto.DailyStatsResponse;
 import com.tikkeul.mote.dto.StatsResponse;
 import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.entity.ParkingHistory;
+import com.tikkeul.mote.entity.SubscriptionHistory;
 import com.tikkeul.mote.repository.ParkRepository;
 import com.tikkeul.mote.repository.ParkingHistoryRepository;
+import com.tikkeul.mote.repository.SubscriptionHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,48 +22,54 @@ public class StatsService {
 
     private final ParkingHistoryRepository parkingHistoryRepository;
     private final ParkRepository parkRepository;
+    private final SubscriptionHistoryRepository subscriptionHistoryRepository;
 
     public StatsResponse getDailyStats(Admin admin, LocalDate startDate, LocalDate endDate) {
         List<DailyStatsResponse> dailyStatsList = new ArrayList<>();
-        long periodTotalRevenue = 0;
+        long periodTotalParkingRevenue = 0; // 기간 총 일반 주차 매출
+        long periodTotalSubscriptionRevenue = 0; // 기간 총 정기권 매출
         long periodTotalEntries = 0;
         long periodTotalExits = 0;
 
-        // 시작일부터 종료일까지 하루씩 반복
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             var startOfDay = date.atStartOfDay();
             var endOfDay = date.atTime(LocalTime.MAX);
 
-            // 1. 해당일에 '출차'한 기록으로 매출과 출차 대수 계산
+            // 일반 주차 매출 및 출차 대수
             List<ParkingHistory> historiesExitedToday = parkingHistoryRepository.findByAdminAndExitTimeBetween(admin, startOfDay, endOfDay);
             int dailyExits = historiesExitedToday.size();
-            int dailyRevenue = historiesExitedToday.stream().mapToInt(ParkingHistory::getFee).sum();
+            int dailyParkingRevenue = historiesExitedToday.stream()
+                    .mapToInt(ParkingHistory::getFee).sum();
 
-            // 2. 해당일에 '입차'한 기록으로 입차 대수 계산
-            // (과거에 입차했다가 오늘 나간 차량 + 오늘 입차해서 아직 주차 중인 차량)
+            // 입차 대수
             long entriesFromHistory = parkingHistoryRepository.countByAdminAndEntryTimeBetween(admin, startOfDay, endOfDay);
             long entriesFromPark = parkRepository.countByAdminAndTimestampBetween(admin, startOfDay, endOfDay);
             int dailyEntries = (int) (entriesFromHistory + entriesFromPark);
 
-            // 3. 일별 통계 DTO 생성
+            // 정기권 매출
+            List<SubscriptionHistory> subscriptionsStartedToday = subscriptionHistoryRepository.findByAdminAndHistoryStartDateBetween(admin, date, date);
+            int dailySubscriptionRevenue = subscriptionsStartedToday.stream().mapToInt(SubscriptionHistory::getSubHistoryPrice).sum();
+
             dailyStatsList.add(DailyStatsResponse.builder()
                     .date(date)
-                    .totalRevenue(dailyRevenue)
+                    .totalRevenue(dailyParkingRevenue) // 분리된 매출로 저장
+                    .subscriptionRevenue(dailySubscriptionRevenue) // 분리된 매출로 저장
                     .totalEntries(dailyEntries)
                     .totalExits(dailyExits)
                     .build());
 
-            // 4. 기간 전체 통계에 합산
-            periodTotalRevenue += dailyRevenue;
+            // 기간별 총합에도 분리하여 합산
+            periodTotalParkingRevenue += dailyParkingRevenue;
+            periodTotalSubscriptionRevenue += dailySubscriptionRevenue;
             periodTotalEntries += dailyEntries;
             periodTotalExits += dailyExits;
         }
 
-        // 5. 최종 응답 DTO 생성
         return StatsResponse.builder()
                 .startDate(startDate)
                 .endDate(endDate)
-                .totalRevenue(periodTotalRevenue)
+                .totalRevenue(periodTotalParkingRevenue) // 분리된 총매출로 응답
+                .totalSubscriptionRevenue(periodTotalSubscriptionRevenue) // 분리된 총매출로 응답
                 .totalEntries(periodTotalEntries)
                 .totalExits(periodTotalExits)
                 .dailyStats(dailyStatsList)

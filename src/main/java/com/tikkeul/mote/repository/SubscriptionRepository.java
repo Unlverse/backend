@@ -16,4 +16,5 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     boolean existsByAdminAndSubPlateAndEndDateAfter(Admin admin, String subPlate, LocalDate date);
     long deleteByAdmin(Admin admin);
     long countByAdmin(Admin admin);
+    void deleteByEndDateBefore(LocalDate date);
 }
