@@ -26,8 +26,8 @@ public class StatsService {
 
     public StatsResponse getDailyStats(Admin admin, LocalDate startDate, LocalDate endDate) {
         List<DailyStatsResponse> dailyStatsList = new ArrayList<>();
-        long periodTotalParkingRevenue = 0; // 기간 총 일반 주차 매출
-        long periodTotalSubscriptionRevenue = 0; // 기간 총 정기권 매출
+        long periodTotalParkingRevenue = 0;
+        long periodTotalSubscriptionRevenue = 0;
         long periodTotalEntries = 0;
         long periodTotalExits = 0;
 
@@ -38,29 +38,35 @@ public class StatsService {
             // 일반 주차 매출 및 출차 대수
             List<ParkingHistory> historiesExitedToday = parkingHistoryRepository.findByAdminAndExitTimeBetween(admin, startOfDay, endOfDay);
             int dailyExits = historiesExitedToday.size();
-            int dailyParkingRevenue = historiesExitedToday.stream()
-                    .mapToInt(ParkingHistory::getFee).sum();
+            int dailyParkingRevenue = historiesExitedToday.stream().mapToInt(ParkingHistory::getFee).sum();
 
             // 입차 대수
             long entriesFromHistory = parkingHistoryRepository.countByAdminAndEntryTimeBetween(admin, startOfDay, endOfDay);
             long entriesFromPark = parkRepository.countByAdminAndTimestampBetween(admin, startOfDay, endOfDay);
             int dailyEntries = (int) (entriesFromHistory + entriesFromPark);
 
-            // 정기권 매출
+            // 정기권 '신규 매출' 계산
             List<SubscriptionHistory> subscriptionsStartedToday = subscriptionHistoryRepository.findByAdminAndHistoryStartDateBetween(admin, date, date);
             int dailySubscriptionRevenue = subscriptionsStartedToday.stream().mapToInt(SubscriptionHistory::getSubHistoryPrice).sum();
 
+            // '환불액' 계산
+            List<SubscriptionHistory> subscriptionsRefundedToday = subscriptionHistoryRepository.findByAdminAndRefundedAtBetween(admin, startOfDay, endOfDay);
+            int dailyRefundAmount = subscriptionsRefundedToday.stream().mapToInt(SubscriptionHistory::getRefundAmount).sum();
+
+            // 일별 순수 정기권 매출 = (신규 매출) - (환불액)
+            int dailyNetSubscriptionRevenue = dailySubscriptionRevenue - dailyRefundAmount;
+
             dailyStatsList.add(DailyStatsResponse.builder()
                     .date(date)
-                    .totalRevenue(dailyParkingRevenue) // 분리된 매출로 저장
-                    .subscriptionRevenue(dailySubscriptionRevenue) // 분리된 매출로 저장
+                    .totalRevenue(dailyParkingRevenue)
+                    .subscriptionRevenue(dailyNetSubscriptionRevenue)
                     .totalEntries(dailyEntries)
                     .totalExits(dailyExits)
                     .build());
 
             // 기간별 총합에도 분리하여 합산
             periodTotalParkingRevenue += dailyParkingRevenue;
-            periodTotalSubscriptionRevenue += dailySubscriptionRevenue;
+            periodTotalSubscriptionRevenue += dailyNetSubscriptionRevenue; // 순매출을 합산
             periodTotalEntries += dailyEntries;
             periodTotalExits += dailyExits;
         }
@@ -68,8 +74,8 @@ public class StatsService {
         return StatsResponse.builder()
                 .startDate(startDate)
                 .endDate(endDate)
-                .totalRevenue(periodTotalParkingRevenue) // 분리된 총매출로 응답
-                .totalSubscriptionRevenue(periodTotalSubscriptionRevenue) // 분리된 총매출로 응답
+                .totalRevenue(periodTotalParkingRevenue)
+                .totalSubscriptionRevenue(periodTotalSubscriptionRevenue)
                 .totalEntries(periodTotalEntries)
                 .totalExits(periodTotalExits)
                 .dailyStats(dailyStatsList)
