@@ -4,6 +4,7 @@ import com.tikkeul.mote.dto.SubscriptionRequest;
 import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.entity.Subscription;
 import com.tikkeul.mote.entity.SubscriptionHistory;
+import com.tikkeul.mote.entity.SubscriptionStatus;
 import com.tikkeul.mote.repository.SubscriptionHistoryRepository;
 import com.tikkeul.mote.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,7 +40,7 @@ public class SubscriptionService {
                 .build();
 
         Subscription savedSubscription = subscriptionRepository.save(subscription);
-        saveSubscriptionHistory(savedSubscription); // 등록 시 이력 테이블에 저장
+        saveSubscriptionHistory(savedSubscription, SubscriptionStatus.PAID);
         return savedSubscription;
     }
 
@@ -47,64 +49,42 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public Optional<Subscription> updateSubscription(Long id, SubscriptionRequest request, Admin admin) {
-        return subscriptionRepository.findById(id).map(subscription -> {
-            // 권한 확인
-            if (!subscription.getAdmin().getAdminId().equals(admin.getAdminId())) {
-                throw new SecurityException("해당 항목을 수정할 권한이 없습니다.");
-            }
-            subscription.setSubPlate(request.getSubPlate());
-            subscription.setStartDate(request.getStartDate());
-            subscription.setEndDate(request.getEndDate());
-            subscription.setSubPrice(request.getSubPrice());
-            subscription.setMemo(request.getMemo());
-            return subscriptionRepository.save(subscription);
-        });
-    }
+    public void refundSubscription(Long subscriptionId, int refundAmount, Admin admin) {
+        // 1. 활성 정기권을 찾음
+        Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new IllegalArgumentException("이미 처리되었거나 존재하지 않는 정기권입니다."));
 
-    @Transactional
-    public void removeSubscription(Long id, Admin admin) {
-        Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 항목이 존재하지 않습니다."));
-
-        // 권한 확인
         if (!subscription.getAdmin().getAdminId().equals(admin.getAdminId())) {
-            throw new SecurityException("해당 항목을 삭제할 권한이 없습니다.");
+            throw new SecurityException("환불을 처리할 권한이 없습니다.");
         }
+
+        // 2. 이력 테이블에서 해당 기록을 찾아 'REFUNDED'로 상태 변경
+        SubscriptionHistory history = subscriptionHistoryRepository
+                .findByAdminAndSubHistoryPlateAndHistoryStartDate(admin, subscription.getSubPlate(), subscription.getStartDate())
+                .orElseThrow(() -> new IllegalStateException("환불할 정기권의 구매 이력을 찾을 수 없습니다."));
+
+        if (refundAmount > history.getSubHistoryPrice() || refundAmount < 0) {
+            throw new IllegalArgumentException("환불 금액이 유효하지 않습니다.");
+        }
+
+        history.setStatus(SubscriptionStatus.REFUNDED);
+        history.setRefundAmount(refundAmount);
+        history.setRefundedAt(LocalDateTime.now());
+        subscriptionHistoryRepository.save(history);
+
+        // 3. 활성 목록에서 최종적으로 삭제
         subscriptionRepository.delete(subscription);
     }
 
-    @Transactional
-    public void deleteSelectedSubscriptions(Admin admin, List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            throw new IllegalArgumentException("삭제할 항목을 선택해주세요.");
-        }
-        List<Subscription> subscriptions = subscriptionRepository.findAllById(ids);
-        for (Subscription subscription : subscriptions) {
-            if (!subscription.getAdmin().getAdminId().equals(admin.getAdminId())) {
-                throw new SecurityException("해당 항목을 삭제할 권한이 없습니다.");
-            }
-        }
-        subscriptionRepository.deleteAllByIdInBatch(ids);
-    }
-
-    @Transactional
-    public void deleteAllSubscriptions(Admin admin) {
-        long count = subscriptionRepository.countByAdmin(admin);
-        if (count == 0) {
-            throw new IllegalStateException("삭제할 항목이 없습니다.");
-        }
-        subscriptionRepository.deleteByAdmin(admin);
-    }
 
     @Transactional
     public void cleanupExpiredSubscriptions() {
         LocalDate today = LocalDate.now();
         subscriptionRepository.deleteByEndDateBefore(today);
-        System.out.println("만료된 정기권 정리 완료.");
+        System.out.println("만료된 정기권을 삭제했습니다.");
     }
 
-    private void saveSubscriptionHistory(Subscription subscription) {
+    private void saveSubscriptionHistory(Subscription subscription, SubscriptionStatus status) {
         SubscriptionHistory history = SubscriptionHistory.builder()
                 .admin(subscription.getAdmin())
                 .subHistoryPlate(subscription.getSubPlate())
@@ -112,6 +92,8 @@ public class SubscriptionService {
                 .historyEndDate(subscription.getEndDate())
                 .subHistoryPrice(subscription.getSubPrice())
                 .historyMemo(subscription.getMemo())
+                .status(status)
+                .refundAmount(0)
                 .build();
         subscriptionHistoryRepository.save(history);
     }

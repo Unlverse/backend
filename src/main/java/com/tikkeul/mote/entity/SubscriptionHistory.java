@@ -4,10 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "sub_history")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,4 +38,14 @@ public class SubscriptionHistory {
 
     @Column(name = "history_memo", length = 500)
     private String historyMemo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SubscriptionStatus status; // 거래 상태 (PAID 또는 REFUNDED)
+
+    @Column(name = "refund_amount")
+    private Integer refundAmount; // 환불 금액
+
+    @Column(name = "refunded_at")
+    private LocalDateTime refundedAt; // 환불 처리 일시
 }
