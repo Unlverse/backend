@@ -2,6 +2,7 @@ package com.tikkeul.mote.controller;
 
 import com.tikkeul.mote.dto.*;
 import com.tikkeul.mote.entity.Admin;
+import com.tikkeul.mote.exception.BlacklistConflictException;
 import com.tikkeul.mote.exception.FullParkingLotException;
 import com.tikkeul.mote.security.AdminDetails;
 import com.tikkeul.mote.service.ParkService;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -38,12 +40,16 @@ public class ParkController {
         try {
             parkService.manualSavePark(admin, request.getPlate(), force);
             return ResponseEntity.ok(Map.of("message", "차량이 등록되었습니다."));
-        } catch (IllegalArgumentException | IllegalStateException | FullParkingLotException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+        } catch (BlacklistConflictException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            response.put("plate", e.getPlate());
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "서버 오류가 발생했습니다."));
+            // 그 외 '이미 입차된 차량' 등 다른 모든 에러 처리
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 

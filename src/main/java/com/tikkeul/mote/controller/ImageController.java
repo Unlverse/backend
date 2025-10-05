@@ -3,6 +3,7 @@ package com.tikkeul.mote.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tikkeul.mote.entity.Admin;
+import com.tikkeul.mote.exception.BlacklistConflictException;
 import com.tikkeul.mote.security.AdminDetails;
 import com.tikkeul.mote.service.ImageService;
 import com.tikkeul.mote.service.ParkService;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -80,11 +82,19 @@ public class ImageController {
                         "imagePath", imagePath
                 ));
 
+            } catch (BlacklistConflictException e) {
+                if (savedFile.exists()) { savedFile.delete(); } // 실패 시 이미지 삭제
+
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("fileName", file.getOriginalFilename());
+                errorResponse.put("status", "error");
+                errorResponse.put("message", e.getMessage());
+                errorResponse.put("plate", e.getPlate());
+                results.add(errorResponse);
+
             } catch (Exception e) {
-                // 실패 시 이미지 삭제
-                if (savedFile.exists()) {
-                    savedFile.delete();
-                }
+                // 그 외 모든 일반적인 예외 처리
+                if (savedFile.exists()) { savedFile.delete(); } // 실패 시 이미지 삭제
 
                 results.add(Map.of(
                         "fileName", file.getOriginalFilename(),
