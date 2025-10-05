@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BlacklistConflictException.class)
     public ResponseEntity<Map<String, String>> handleBlacklistConflictException(BlacklistConflictException ex) {
         Map<String, String> response = new HashMap<>();
-        response.put("error", "BLACKLIST_CONFLICT");
+        response.put("status", "error");
         response.put("message", ex.getMessage());
         response.put("plate", ex.getPlate()); // 인식된 차량 번호 추가
         return new ResponseEntity<>(response, HttpStatus.CONFLICT); // 409 Conflict
