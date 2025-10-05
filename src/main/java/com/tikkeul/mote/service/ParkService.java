@@ -6,6 +6,7 @@ import com.tikkeul.mote.entity.Admin;
 import com.tikkeul.mote.entity.Park;
 import com.tikkeul.mote.entity.ParkingHistory;
 import com.tikkeul.mote.entity.ParkingLot;
+import com.tikkeul.mote.exception.BlacklistConflictException;
 import com.tikkeul.mote.exception.FullParkingLotException;
 import com.tikkeul.mote.repository.ParkRepository;
 import com.tikkeul.mote.repository.ParkingHistoryRepository;
@@ -57,7 +58,7 @@ public class ParkService {
         // 3. 블랙리스트 체크
         if (!"NOT_FOUND".equalsIgnoreCase(plate) && !force) {
             if (blacklistService.existsByAdminAndPlate(admin, plate)) {
-                throw new IllegalStateException("해당 차량은 블랙리스트에 등록되어 있습니다. 등록하시겠습니까?");
+                throw new BlacklistConflictException("해당 차량은 블랙리스트에 등록되어 있습니다. 등록하시겠습니까?", plate);
             }
         }
 
@@ -105,7 +106,7 @@ public class ParkService {
         // 2. 블랙리스트 체크
         if (!"NOT_FOUND".equalsIgnoreCase(plate) && !force) {
             if (blacklistService.existsByAdminAndPlate(admin, plate)) {
-                throw new IllegalStateException("해당 차량은 블랙리스트에 등록되어 있습니다. 등록하시겠습니까?");
+                throw new BlacklistConflictException("해당 차량은 블랙리스트에 등록되어 있습니다. 등록하시겠습니까?", plate);
             }
         }
 
