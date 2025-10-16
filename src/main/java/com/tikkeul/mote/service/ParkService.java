@@ -126,9 +126,9 @@ public class ParkService {
         Park park = Park.builder()
                 .admin(admin)
                 .plate(plate)
-                .latitude(null)              // GPS 없음
-                .longitude(null)             // GPS 없음
-                .imagePath(null)             // 사진 없음
+                .latitude(lot.getParkingLotLatitude())
+                .longitude(lot.getParkingLotLongitude())
+                .imagePath(null)
                 .timestamp(LocalDateTime.now())
                 .build();
 
