@@ -3,6 +3,7 @@ package com.tikkeul.mote.controller;
 import com.tikkeul.mote.dto.*;
 import com.tikkeul.mote.security.AdminDetails;
 import com.tikkeul.mote.service.PhoneVerificationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import com.tikkeul.mote.service.AdminService;
 import com.tikkeul.mote.service.BusinessVerificationService;
@@ -49,7 +50,7 @@ public class AdminController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody AdminSignupRequest request) {
+    public ResponseEntity<?> signup(@Valid @RequestBody AdminSignupRequest request) {
         try {
             adminService.signup(request);
             return ResponseEntity.ok("회원가입이 완료되었습니다.");
