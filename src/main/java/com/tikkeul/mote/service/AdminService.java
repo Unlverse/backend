@@ -22,6 +22,7 @@ public class AdminService {
     private final StringRedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final KakaoMapService kakaoMapService;
+    private final PhoneVerificationService phoneVerificationService;
 
     @Transactional(rollbackFor = Exception.class)
     public void signup(AdminSignupRequest request) {
@@ -143,4 +144,41 @@ public class AdminService {
 
         parkingLotRepository.save(parkingLot);
     }
+
+    public void sendVerificationCodeForFindId(String name, String phoneNumber) {
+        adminRepository.findByNameAndPhoneNumber(name, phoneNumber)
+                .orElseThrow(() -> new IllegalArgumentException("해당 정보로 가입된 계정을 찾을 수 없습니다."));
+        phoneVerificationService.sendVerificationCode(phoneNumber);
+    }
+
+    public String verifyCodeAndFindId(String phoneNumber, String code) {
+        if (!phoneVerificationService.verifyCode(phoneNumber, code)) {
+            throw new IllegalArgumentException("인증번호가 올바르지 않습니다.");
+        }
+        Admin admin = adminRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾는 데 실패했습니다."));
+
+        redisTemplate.delete("verify:" + phoneNumber);
+        return admin.getUsername();
+    }
+
+    public void sendVerificationCodeForPasswordReset(String username, String phoneNumber) {
+        adminRepository.findByUsernameAndPhoneNumber(username, phoneNumber)
+                .orElseThrow(() -> new IllegalArgumentException("해당 정보로 가입된 계정을 찾을 수 없습니다."));
+        phoneVerificationService.sendVerificationCode(phoneNumber);
+    }
+
+    @Transactional
+    public void resetPassword(String phoneNumber, String code, String newPassword) {
+        if (!phoneVerificationService.verifyCode(phoneNumber, code)) {
+            throw new IllegalArgumentException("인증번호가 올바르지 않습니다.");
+        }
+        Admin admin = adminRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾는 데 실패했습니다."));
+
+        admin.setPassword(passwordEncoder.encode(newPassword));
+        adminRepository.save(admin);
+        redisTemplate.delete("verify:" + phoneNumber);
+    }
+
 }

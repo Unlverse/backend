@@ -37,7 +37,7 @@ public class CoolSmsService {
             Message message = new Message();
             message.setFrom(sender);
             message.setTo(to);
-            message.setText("[주차] 인증번호: " + code + " 를 입력해주세요.");
+            message.setText("[차곡차곡] 인증번호: " + code + " 를 입력해주세요.");
 
             SingleMessageSentResponse response = messageService.sendOne(new SingleMessageSendingRequest(message));
 

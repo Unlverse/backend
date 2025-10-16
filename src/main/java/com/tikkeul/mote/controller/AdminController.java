@@ -1,11 +1,9 @@
 package com.tikkeul.mote.controller;
 
+import com.tikkeul.mote.dto.*;
 import com.tikkeul.mote.security.AdminDetails;
+import com.tikkeul.mote.service.PhoneVerificationService;
 import lombok.RequiredArgsConstructor;
-import com.tikkeul.mote.dto.AdminLoginRequest;
-import com.tikkeul.mote.dto.AdminSignupRequest;
-import com.tikkeul.mote.dto.BusinessVerificationRequest;
-import com.tikkeul.mote.dto.AdminInfoUpdateRequest;
 import com.tikkeul.mote.service.AdminService;
 import com.tikkeul.mote.service.BusinessVerificationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.AuthenticationException;
 
+import java.util.Map;
+
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/admin")
@@ -25,8 +25,9 @@ import org.springframework.security.core.AuthenticationException;
 public class AdminController {
 
     private final AdminService adminService;
-    private final BusinessVerificationService businessVerificationService;
+    //private final BusinessVerificationService businessVerificationService;
     private final AuthenticationManager authenticationManager;
+    private final PhoneVerificationService verificationService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AdminLoginRequest request, HttpServletRequest httpRequest) {
@@ -80,6 +81,63 @@ public class AdminController {
             return ResponseEntity.ok("회원 정보가 수정되었습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("수정 실패: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/phone-verification/send")
+    public ResponseEntity<?> send(@RequestBody PhoneSendRequest request) {
+        boolean result = verificationService.sendVerificationCode(request.getPhoneNumber());
+        if (result) return ResponseEntity.ok("인증번호 전송 성공");
+        return ResponseEntity.status(500).body("전송 실패");
+    }
+
+    @PostMapping("/phone-verification/verify")
+    public ResponseEntity<?> check(@RequestBody PhoneVerifyRequest request) {
+        boolean result = verificationService.verifyCode(request.getPhoneNumber(), request.getCode());
+        if (result) return ResponseEntity.ok("인증 성공");
+        return ResponseEntity.status(400).body("인증 실패");
+    }
+
+    @PostMapping("/find-id/send")
+    public ResponseEntity<?> sendCodeForFindId(@RequestBody FindIdSendCodeRequest request) {
+        try {
+            adminService.sendVerificationCodeForFindId(request.getName(), request.getPhoneNumber());
+            return ResponseEntity.ok(Map.of("message", "인증번호가 발송되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/find-id/verify")
+    public ResponseEntity<?> verifyForFindId(@RequestBody FindIdVerifyRequest request) {
+        try {
+            String username = adminService.verifyCodeAndFindId(request.getPhoneNumber(), request.getCode());
+            return ResponseEntity.ok(Map.of(
+                    "message", "인증에 성공했습니다.",
+                    "username", username
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password/send")
+    public ResponseEntity<?> sendCodeForPasswordReset(@RequestBody PasswordResetSendCodeRequest request) {
+        try {
+            adminService.sendVerificationCodeForPasswordReset(request.getUsername(), request.getPhoneNumber());
+            return ResponseEntity.ok(Map.of("message", "인증번호가 발송되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password/verify")
+    public ResponseEntity<?> confirmPasswordReset(@RequestBody PasswordResetConfirmRequest request) {
+        try {
+            adminService.resetPassword(request.getPhoneNumber(), request.getCode(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "비밀번호가 성공적으로 변경되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }
