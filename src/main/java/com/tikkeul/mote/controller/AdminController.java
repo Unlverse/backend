@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import com.tikkeul.mote.service.AdminService;
 import com.tikkeul.mote.service.BusinessVerificationService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -72,7 +73,22 @@ public class AdminController {
 
  */
 
-    @PatchMapping("/update-admin-info")
+    @GetMapping("/info")
+    public ResponseEntity<AdminInfoResponse> getAdminInfo(
+            @AuthenticationPrincipal AdminDetails adminDetails
+    ) {
+        try {
+            AdminInfoResponse response = adminService.getAdminInfo(adminDetails.getAdmin());
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            // 주차장 정보가 없는 경우 등
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // 혹은 적절한 에러 응답
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null); // 혹은 적절한 에러 응답
+        }
+    }
+
+    @PatchMapping("/update-info")
     public ResponseEntity<?> updateAdminInfo(
             @AuthenticationPrincipal AdminDetails adminDetails,
             @RequestBody AdminInfoUpdateRequest request
