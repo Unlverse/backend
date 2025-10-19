@@ -1,5 +1,6 @@
 package com.tikkeul.mote.service;
 
+import com.tikkeul.mote.dto.AdminInfoResponse;
 import com.tikkeul.mote.dto.AdminSignupRequest;
 import com.tikkeul.mote.dto.AdminInfoUpdateRequest;
 import com.tikkeul.mote.entity.Admin;
@@ -117,6 +118,18 @@ public class AdminService {
         }
 
         parkingLotRepository.save(parkingLot);
+    }
+
+    public AdminInfoResponse getAdminInfo(Admin admin) {
+        ParkingLot parkingLot = parkingLotRepository.findByAdmin(admin)
+                .orElseThrow(() -> new IllegalStateException("주차장 정보를 찾을 수 없습니다."));
+
+        return AdminInfoResponse.builder()
+                .phoneNumber(admin.getPhoneNumber())
+                .basePrice(parkingLot.getBasePrice())
+                .pricePerMinute(parkingLot.getPricePerMinute())
+                .totalLot(parkingLot.getTotalLot())
+                .build();
     }
 
     public void updateAdminInfo(Admin admin, AdminInfoUpdateRequest request) {
