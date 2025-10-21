@@ -47,24 +47,24 @@ public class AdminService {
 
         /*  3. 사업자번호 중복 체크
         if (adminRepository.existsByBusinessNo(businessNo)) {
-            throw new IllegalArgumentException("이미 등록된 사업자등록번호입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 사업자등록번호입니다.");
         }
          */
 
 
         //  4. ID 중복 체크
         if (adminRepository.existsByUsername(userName)) {
-            throw new IllegalArgumentException("이미 사용 중인 ID입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
 
         // 5. 전화번호 중복 체크
         if (adminRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new IllegalArgumentException("이미 가입된 전화번호입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 전화번호입니다.");
         }
 
         // 6. 주차장 주소 중복 체크
         if (parkingLotRepository.existsByAddress(request.getAddress())) {
-            throw new IllegalArgumentException("이미 등록된 주차장 주소입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 주차장 주소입니다.");
         }
 
         //  7. 비밀번호 확인
