@@ -13,7 +13,7 @@ public interface ParkingLotRepository extends JpaRepository<ParkingLot, Long> {
 
     Optional<ParkingLot> findByParkingLotName(String parkingLotName);
     Optional<ParkingLot> findByAdmin(Admin admin);
-
+    boolean existsByAddress(String address);
 
     @Query(
             value = """
