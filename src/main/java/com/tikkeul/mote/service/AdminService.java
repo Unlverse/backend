@@ -51,7 +51,6 @@ public class AdminService {
         }
          */
 
-
         //  4. ID 중복 체크
         if (adminRepository.existsByUsername(userName)) {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
@@ -111,6 +110,11 @@ public class AdminService {
         //  12. Redis 키 삭제 (선택)
         // redisTemplate.delete("business_verified:" + businessNo);
         redisTemplate.delete("verify:" + phoneNumber);
+    }
+
+    @Transactional(readOnly = true) // DB를 읽기만 하므로 readOnly = true 추가
+    public boolean isUsernameAvailable(String username) {
+        return !adminRepository.existsByUsername(username);
     }
 
     public void updateParkingLot(Admin admin, AdminInfoUpdateRequest request) {

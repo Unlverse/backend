@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 "/api/admin/find-id/verify",
                                 "/api/admin/reset-password/send",
                                 "/api/admin/reset-password/verify",
+                                "/api/admin/check-username",
                                 "/api/visitor/park-info",
                                 "/api/visitor/not-found-info",
                                 "/api/visitor/park-info/{parkId}",
