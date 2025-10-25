@@ -73,6 +73,14 @@ public class AdminController {
 
  */
 
+    @GetMapping("/check-username")
+    public ResponseEntity<Map<String, Boolean>> checkUsernameAvailability(
+            @RequestParam("username") String username
+    ) {
+        boolean isAvailable = adminService.isUsernameAvailable(username);
+        return ResponseEntity.ok(Map.of("isAvailable", isAvailable));
+    }
+
     @GetMapping("/info")
     public ResponseEntity<AdminInfoResponse> getAdminInfo(
             @AuthenticationPrincipal AdminDetails adminDetails
