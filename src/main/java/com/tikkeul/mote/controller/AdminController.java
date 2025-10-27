@@ -111,9 +111,20 @@ public class AdminController {
 
     @PostMapping("/phone-verification/send")
     public ResponseEntity<?> send(@RequestBody PhoneSendRequest request) {
-        boolean result = verificationService.sendVerificationCode(request.getPhoneNumber());
-        if (result) return ResponseEntity.ok("인증번호 전송 성공");
-        return ResponseEntity.status(500).body("전송 실패");
+        try {
+            boolean result = adminService.sendVerificationCodeForSignup(request.getPhoneNumber());
+
+            if (result) {
+                return ResponseEntity.ok(Map.of("status", "success", "message", "인증번호가 전송되었습니다."));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "error", "message", "인증번호 전송에 실패했습니다."));
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("status", "error", "message", e.getMessage()));
+        } catch (Exception e) {
+            // 기타 서버 오류
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "error", "message", "서버 오류가 발생했습니다."));
+        }
     }
 
     @PostMapping("/phone-verification/verify")
