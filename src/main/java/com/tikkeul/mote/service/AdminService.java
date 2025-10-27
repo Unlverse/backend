@@ -56,25 +56,20 @@ public class AdminService {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
 
-        // 5. 전화번호 중복 체크
-        if (adminRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new IllegalArgumentException("이미 사용 중인 전화번호입니다.");
-        }
-
-        // 6. 주차장 주소 중복 체크
+        // 5. 주차장 주소 중복 체크
         if (parkingLotRepository.existsByAddress(request.getAddress())) {
             throw new IllegalArgumentException("이미 사용 중인 주차장 주소입니다.");
         }
 
-        //  7. 비밀번호 확인
+        //  6. 비밀번호 확인
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        //  8. 비밀번호 암호화
+        //  7. 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        //  9. Admin 저장
+        //  8. Admin 저장
         Admin admin = Admin.builder()
                 .username(userName)
                 .password(encodedPassword)
@@ -86,14 +81,14 @@ public class AdminService {
 
         adminRepository.save(admin);
 
-        // 10. 주소 → 좌표 변환 (필수 값 검증)
+        // 9. 주소 → 좌표 변환 (필수 값 검증)
         if (request.getAddress() == null || request.getAddress().isBlank()) {
             throw new IllegalArgumentException("주차장 주소를 입력해 주세요.");
         }
 
         var coord = kakaoMapService.geocodeAddress(request.getAddress());
 
-        //  11. parking_lot 저장
+        //  10. parking_lot 저장
         ParkingLot lot = ParkingLot.builder()
                 .admin(admin)
                 .parkingLotName(request.getParkingLotName())
@@ -107,7 +102,7 @@ public class AdminService {
 
         parkingLotRepository.save(lot);
 
-        //  12. Redis 키 삭제 (선택)
+        //  11. Redis 키 삭제
         // redisTemplate.delete("business_verified:" + businessNo);
         redisTemplate.delete("verify:" + phoneNumber);
     }
@@ -171,6 +166,14 @@ public class AdminService {
         }
 
         parkingLotRepository.save(parkingLot);
+    }
+
+    public boolean sendVerificationCodeForSignup(String phoneNumber) {
+        if (adminRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new IllegalArgumentException("이미 가입된 전화번호입니다.");
+        }
+
+        return phoneVerificationService.sendVerificationCode(phoneNumber);
     }
 
     public void sendVerificationCodeForFindId(String name, String phoneNumber) {
