@@ -37,9 +37,11 @@ public class ImageController {
     @PostMapping("/upload")
     public ResponseEntity<?> handleUpload(
             @RequestParam("files") MultipartFile[] files,
+            @RequestParam(value = "latitude", required = false) Double latitude,
+            @RequestParam(value = "longitude", required = false) Double longitude,
             @RequestParam(value = "force", defaultValue = "false") boolean force,
             @AuthenticationPrincipal AdminDetails adminDetails
-    ) throws IOException, ImageReadException {
+    ) throws IOException {
 
         List<Map<String, Object>> results = new ArrayList<>();
         Admin admin = adminDetails.getAdmin();
@@ -64,7 +66,20 @@ public class ImageController {
                 file.transferTo(savedFile);
 
                 // 4. GPS 정보 추출
-                Map<String, Object> gpsInfo = imageService.extractGpsInfo(savedFile);
+                Map<String, Object> gpsInfo = null;
+
+                // Case 1: 프론트에서 좌표를 보낸 경우 (즉석 촬영)
+                if (file == files[0] && latitude != null && longitude != null) {
+                    gpsInfo = Map.of("latitude", latitude, "longitude", longitude);
+                } else {
+                    // Case 2: 프론트에서 좌표가 안 온 경우 (라이브러리)
+                    gpsInfo = imageService.extractGpsInfo(savedFile);
+                }
+
+                // Case 3: Case 1, 2 모두 실패한 경우
+                if (gpsInfo == null) {
+                    throw new IllegalStateException("GPS 정보를 찾을 수 없습니다.");
+                }
 
                 // 5. OCR 정보 추출
                 String ocrJson = imageService.sendToOcrServer(savedFile);

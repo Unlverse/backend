@@ -1,7 +1,6 @@
 package com.tikkeul.mote.service;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
 import org.apache.commons.imaging.common.RationalNumber;
 import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata;
@@ -24,21 +23,25 @@ public class ImageService {
 
     private final WebClient webClient;
 
-    public Map<String, Object> extractGpsInfo(File imageFile) throws IOException, ImageReadException {
-        var metadata = Imaging.getMetadata(imageFile);
-        if (metadata instanceof JpegImageMetadata jpegMetadata) {
-            TiffField latRef = jpegMetadata.findEXIFValueWithExactMatch(GpsTagConstants.GPS_TAG_GPS_LATITUDE_REF);
-            TiffField lonRef = jpegMetadata.findEXIFValueWithExactMatch(GpsTagConstants.GPS_TAG_GPS_LONGITUDE_REF);
-            TiffField latField = jpegMetadata.findEXIFValueWithExactMatch(GpsTagConstants.GPS_TAG_GPS_LATITUDE);
-            TiffField lonField = jpegMetadata.findEXIFValueWithExactMatch(GpsTagConstants.GPS_TAG_GPS_LONGITUDE);
+    public Map<String, Object> extractGpsInfo(File imageFile) {
+        try {
+            var metadata = Imaging.getMetadata(imageFile);
+            if (metadata instanceof JpegImageMetadata jpegMetadata) {
+                TiffField latRef = jpegMetadata.findEXIFValueWithExactMatch(GpsTagConstants.GPS_TAG_GPS_LATITUDE_REF);
+                TiffField lonRef = jpegMetadata.findEXIFValueWithExactMatch(GpsTagConstants.GPS_TAG_GPS_LONGITUDE_REF);
+                TiffField latField = jpegMetadata.findEXIFValueWithExactMatch(GpsTagConstants.GPS_TAG_GPS_LATITUDE);
+                TiffField lonField = jpegMetadata.findEXIFValueWithExactMatch(GpsTagConstants.GPS_TAG_GPS_LONGITUDE);
 
-            if (latField != null && lonField != null) {
-                double latitude = convertToDegrees(latField.getValue(), latRef.getStringValue());
-                double longitude = convertToDegrees(lonField.getValue(), lonRef.getStringValue());
-                return Map.of("latitude", latitude, "longitude", longitude);
+                if (latField != null && lonField != null && latRef != null && lonRef != null) {
+                    double latitude = convertToDegrees(latField.getValue(), latRef.getStringValue());
+                    double longitude = convertToDegrees(lonField.getValue(), lonRef.getStringValue());
+                    return Map.of("latitude", latitude, "longitude", longitude);
+                }
             }
+            return null;
+        } catch (Exception e) {
+            return null;
         }
-        throw new IllegalStateException("GPS 정보를 찾을 수 없습니다.");
     }
 
     private double convertToDegrees(Object value, String ref) {
