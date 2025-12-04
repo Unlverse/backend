@@ -19,5 +19,15 @@
  
 
 ## 기술 스택 
+### Backend
 
+* **Language**: Java, Python
+
+* **Library & Framework**: Spring Boot, Flask, EasyOCR
+ 
+* **Database**: MySQL, Redis
+  
+* **Deploy**: Google Cloud Flatform
+
+* **Collaboration**: Github, Discord, Notion
 
