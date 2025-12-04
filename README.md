@@ -1,4 +1,4 @@
-# 🚗 OCR 기반 효율적인 주차 관리 서비스 차곡차곡
+<img width="86" height="109" alt="image" src="https://github.com/user-attachments/assets/6b576e4c-f035-4f42-ab11-c31a2d7a0859" /># 🚗 OCR 기반 효율적인 주차 관리 서비스 차곡차곡
 <img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/3e3f1e06-3732-44c8-8ea4-94eba1a03359" />
 
 ## 프로젝트 개요
@@ -14,12 +14,12 @@
    - 주차장 이용자는 자신의 주차 정보를 손쉽게 조회.
      
 ## 팀원 구성 및 역할 분담
-* **정찬우**
+* **정찬우** : 백엔드 
 
-* **최재우**
+* **최재우** : 백엔드 
 
-* **최용훈**
+* **최용훈** : 프론트엔트 
 
-* **이재유**
-
-* **장재혁**
+* **이재유** : 프론트엔드
+ 
+* **장재혁** : 프론트엔드
