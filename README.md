@@ -25,6 +25,6 @@
 | **Language** | Java 21, Python 3.9 | 안정적인 서버(Java)와 AI 라이브러리 활용(Python)을 위한 Polyglot 전략 |
 | **Framework** | Spring Boot 3.4, Flask | 엔터프라이즈급 비즈니스 로직(Spring)과 경량 AI 서빙(Flask) 분리 |
 | **Database** | MySQL 8.0, Redis | 공간 데이터(Spatial) 처리 및 고속 세션/캐시 관리 |
-| **Infra** | AWS (EC2), Docker | (배포 환경에 맞춰 수정 가능) |
-| **Collaboration** | GitHub, Slack | 이슈 트래킹 및 협업 관리 |
+| **Infra** | Google Cloud Plaform |  |
+| **Collaboration** | GitHub, Dicord | 이슈 트래킹 및 협업 관리 |
 
