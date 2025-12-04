@@ -19,6 +19,13 @@
  
 
 ## 기술 스택 
+### Frontend
+* **Language**: Javascript, HTML5, CSS3
+
+* **Library & Framework**: React
+
+* **Deploy**: Google Cloud Flatform
+
 ### Backend
 
 * **Language**: Java, Python
@@ -31,3 +38,5 @@
 
 * **Collaboration**: Github, Discord, Notion
 
+## 시스템 아키텍처
+<img width="1247" height="747" alt="Image" src="https://github.com/user-attachments/assets/ce1c19c7-8e36-4c62-a2aa-b8146d7bbd6f" />
