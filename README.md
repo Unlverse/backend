@@ -24,14 +24,14 @@
 
 * **Language**: Javascript, HTML5, CSS3
 * **Library & Framework**: React
-* **Deploy**: Google Cloud Flatform
+* **Deploy**: Google Cloud Platform
 
 ### Backend
 
 * **Language**: Java, Python
 * **Library & Framework**: Spring Boot, Flask, EasyOCR
 * **Database**: MySQL, Redis
-* **Deploy**: Google Cloud Flatform
+* **Deploy**: Google Cloud Platform
 * **Collaboration**: Github, Discord, Notion
 
 ## 3. 시스템 아키텍처
