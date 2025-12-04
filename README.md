@@ -38,6 +38,8 @@
 
 * **Collaboration**: Github, Discord, Notion
 
-## 시스템 아키텍처 & ERD
+## 시스템 아키텍처
 <img width="1247" height="747" alt="Image" src="https://github.com/user-attachments/assets/ce1c19c7-8e36-4c62-a2aa-b8146d7bbd6f" />
+
+## ERD
 <img width="1425" height="737" alt="Image" src="https://github.com/user-attachments/assets/123a934a-bbcd-4f5a-be26-a86dc3fb5934" />
