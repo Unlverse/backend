@@ -43,3 +43,5 @@
 
 ## ERD
 <img width="1425" height="737" alt="Image" src="https://github.com/user-attachments/assets/123a934a-bbcd-4f5a-be26-a86dc3fb5934" />
+
+## 세부 기능
