@@ -1,1 +1,1 @@
-application-example.properties 수정하기
+# 🅿️ OCR 기반 스마트 주차 통합 관제 솔루션 (차곡차곡)
